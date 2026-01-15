@@ -1,7 +1,7 @@
 import svgPaths from "@/imports/svg-t7e50z2hox";
 import imgAlexJonathan from "@/assets/Alex.png";
 import { IconPencil, IconEye, IconArrowRight, IconFileText, IconUser, IconClipboardCheck, IconDoorExit, IconSettings, IconX, IconPlus, IconPhoto, IconMoodAngry, IconMoodSad, IconMoodHappy, IconMoodNeutral, IconAlertCircle, IconClock, IconFlame, IconMoodCrazyHappy, IconUsers, IconChevronDown, IconTrash, IconCheck, IconPlayerStop, IconMessage, IconPhoneOff, IconUserUp, IconTimeDuration10, IconSearch, IconRefresh } from "@tabler/icons-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -45,6 +45,25 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
     criteria: string[];
     mappedCompetency: string;
   }
+
+  // Available competencies for mapping
+  const availableCompetencies = [
+    "Empathy",
+    "Active Listening",
+    "Problem-Solving",
+    "Resolution",
+    "Communication",
+    "Knowledge",
+    "Patience",
+    "Professionalism",
+    "Conflict Resolution",
+    "Time Management",
+    "Documentation",
+    "Product Knowledge",
+    "Customer Service",
+    "De-escalation",
+    "Policy Adherence",
+  ];
 
   const [evaluationParameters, setEvaluationParameters] = useState<EvaluationParameter[]>([
     {
@@ -91,6 +110,26 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
     criteriaIndex?: number;
   } | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [openCompetencyDropdown, setOpenCompetencyDropdown] = useState<string | null>(null);
+
+  // Handle clicking outside competency dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if click is outside any competency dropdown
+      const competencyDropdown = target.closest('[data-competency-dropdown]');
+      if (!competencyDropdown && openCompetencyDropdown) {
+        setOpenCompetencyDropdown(null);
+      }
+    };
+
+    if (openCompetencyDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [openCompetencyDropdown]);
 
   // Exit conditions state
   interface ExitCondition {
@@ -1143,60 +1182,47 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                             </li>
                           ))}
                         </ul>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 relative">
                           <span className="text-sm text-[#8d8ba7]">Mapped competency</span>
-                          {editingEvaluation?.type === "competency" &&
-                          editingEvaluation.parameterId === parameter.id ? (
-                            <input
-                              type="text"
-                              value={editingValue}
-                              onChange={(e) => setEditingValue(e.target.value)}
-                              onBlur={() => {
-                                if (editingValue.trim()) {
-                                  setEvaluationParameters(
-                                    evaluationParameters.map((p) =>
-                                      p.id === parameter.id
-                                        ? { ...p, mappedCompetency: editingValue.trim() }
-                                        : p
-                                    )
-                                  );
-                                }
-                                setEditingEvaluation(null);
-                                setEditingValue("");
+                          <div className="relative" data-competency-dropdown>
+                            <button
+                              onClick={() => {
+                                setOpenCompetencyDropdown(
+                                  openCompetencyDropdown === parameter.id ? null : parameter.id
+                                );
                               }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && editingValue.trim()) {
-                                  setEvaluationParameters(
-                                    evaluationParameters.map((p) =>
-                                      p.id === parameter.id
-                                        ? { ...p, mappedCompetency: editingValue.trim() }
-                                        : p
-                                    )
-                                  );
-                                  setEditingEvaluation(null);
-                                  setEditingValue("");
-                                } else if (e.key === "Escape") {
-                                  setEditingEvaluation(null);
-                                  setEditingValue("");
-                                }
-                              }}
-                              className="px-3 py-1 bg-[#d4e6dd] text-[#0f5323] text-sm rounded border border-[#0975d7] focus:outline-none"
-                              autoFocus
-                            />
-                          ) : (
-                            <span className="px-3 py-1 bg-[#d4e6dd] text-[#0f5323] text-sm rounded">
-                              {parameter.mappedCompetency}
-                            </span>
-                          )}
-                          <button
-                            onClick={() => {
-                              setEditingEvaluation({ type: "competency", parameterId: parameter.id });
-                              setEditingValue(parameter.mappedCompetency);
-                            }}
-                            className="p-1 hover:bg-gray-200 rounded"
-                          >
-                            <IconPencil className="w-3 h-3 text-[#8d8ba7]" stroke={2.5} />
-                          </button>
+                              className="flex items-center gap-2 px-3 py-1 bg-[#d4e6dd] text-[#0f5323] text-sm rounded hover:bg-[#c4d6cd] transition-colors"
+                            >
+                              <span>{parameter.mappedCompetency}</span>
+                              <IconChevronDown className={`w-3 h-3 transition-transform ${openCompetencyDropdown === parameter.id ? 'rotate-180' : ''}`} stroke={2} />
+                            </button>
+                            {openCompetencyDropdown === parameter.id && (
+                              <div className="absolute left-0 top-[calc(100%+4px)] bg-white rounded-lg shadow-lg border border-[#e4dddd] py-2 min-w-[200px] max-w-[300px] z-50 max-h-[300px] overflow-y-auto">
+                                {availableCompetencies.map((competency) => (
+                                  <button
+                                    key={competency}
+                                    onClick={() => {
+                                      setEvaluationParameters(
+                                        evaluationParameters.map((p) =>
+                                          p.id === parameter.id
+                                            ? { ...p, mappedCompetency: competency }
+                                            : p
+                                        )
+                                      );
+                                      setOpenCompetencyDropdown(null);
+                                    }}
+                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-[#f5f5f5] transition-colors ${
+                                      parameter.mappedCompetency === competency
+                                        ? 'bg-[#d4e6dd] text-[#0f5323] font-medium'
+                                        : 'text-[#3d3c52]'
+                                    }`}
+                                  >
+                                    {competency}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
