@@ -211,7 +211,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
       action: "End scenario",
       icon: icons[exitConditions.length % icons.length],
     };
-    setExitConditions([...exitConditions, newCondition]);
+    setExitConditions([newCondition, ...exitConditions]);
   };
 
   const deleteExitCondition = (id: string) => {
@@ -1055,9 +1055,33 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
             {activeTab === "evaluation" && (
               <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="border-b border-[#eee] py-4 shrink-0">
-                  <div className="px-6">
+                  <div className="px-6 flex items-center justify-between">
+                    <div>
                     <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Evaluation</h2>
                     <p className="text-sm text-[#8d8ba7]">Select competencies to assess</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newId = String(evaluationParameters.length + 1);
+                        const newParameter: EvaluationParameter = {
+                          id: newId,
+                          title: "New Evaluation Parameter",
+                          criteria: [
+                            "0-2: [Enter description]",
+                            "3-4: [Enter description]",
+                            "5-6: [Enter description]",
+                            "7-8: [Enter description]",
+                            "9-10: [Enter description]",
+                          ],
+                          mappedCompetency: "Empathy",
+                        };
+                        setEvaluationParameters([newParameter, ...evaluationParameters]);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#0975d7] text-white rounded-lg hover:bg-[#0861b8] transition-colors text-sm font-medium"
+                    >
+                      <IconPlus className="w-4 h-4" stroke={2} />
+                      Add evaluation parameter
+                    </button>
                   </div>
                 </div>
 
@@ -1202,13 +1226,13 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                                   <button
                                     key={competency}
                                     onClick={() => {
-                                      setEvaluationParameters(
-                                        evaluationParameters.map((p) =>
-                                          p.id === parameter.id
+                                  setEvaluationParameters(
+                                    evaluationParameters.map((p) =>
+                                      p.id === parameter.id
                                             ? { ...p, mappedCompetency: competency }
-                                            : p
-                                        )
-                                      );
+                                        : p
+                                    )
+                                  );
                                       setOpenCompetencyDropdown(null);
                                     }}
                                     className={`w-full text-left px-4 py-2 text-sm hover:bg-[#f5f5f5] transition-colors ${
@@ -1227,33 +1251,6 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                       </div>
                     </div>
                   ))}
-                  {/* Add New Parameter Button */}
-                  <div className="bg-white border-b border-[#e4dddd] py-4">
-                    <div className="px-6">
-                      <button
-                        onClick={() => {
-                          const newId = String(evaluationParameters.length + 1);
-                          const newParameter: EvaluationParameter = {
-                            id: newId,
-                            title: "New Evaluation Parameter",
-                            criteria: [
-                              "0-2: [Enter description]",
-                              "3-4: [Enter description]",
-                              "5-6: [Enter description]",
-                              "7-8: [Enter description]",
-                              "9-10: [Enter description]",
-                            ],
-                            mappedCompetency: "New Competency",
-                          };
-                          setEvaluationParameters([...evaluationParameters, newParameter]);
-                        }}
-                        className="w-full py-3 border-2 border-dashed border-[#d0d0d0] rounded-lg text-[#8d8ba7] hover:border-[#0975d7] hover:text-[#0975d7] transition-colors flex items-center justify-center gap-2"
-                      >
-                        <IconPlus className="w-4 h-4" stroke={2} />
-                        Add evaluation parameter
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -1261,9 +1258,18 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
             {activeTab === "exit" && (
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-gradient-to-br from-[#fafafa] to-[#f0f4f8]">
                 <div className="border-b border-[#eee] py-4 shrink-0 bg-white">
-                  <div className="px-6">
-                    <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Exit conditions</h2>
-                    <p className="text-sm text-[#8d8ba7]">Define when the scenario should end</p>
+                  <div className="px-6 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Exit conditions</h2>
+                      <p className="text-sm text-[#8d8ba7]">Define when the scenario should end</p>
+                    </div>
+                    <button
+                      onClick={addExitCondition}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#0975d7] text-white rounded-lg hover:bg-[#0861b8] transition-colors text-sm font-medium"
+                    >
+                      <IconPlus className="w-4 h-4" stroke={2} />
+                      Add exit condition
+                    </button>
                   </div>
                 </div>
 
@@ -1333,21 +1339,21 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                                             }
                                             setEditingExitCondition(null);
                                             setExitConditionEditValue("");
-                                          }}
-                                          onKeyDown={(e) => {
+                              }}
+                              onKeyDown={(e) => {
                                             if (e.key === "Enter" && exitConditionEditValue.trim()) {
                                               updateExitCondition(condition.id, "trigger", exitConditionEditValue.trim());
                                               setEditingExitCondition(null);
                                               setExitConditionEditValue("");
-                                            } else if (e.key === "Escape") {
+                                } else if (e.key === "Escape") {
                                               setEditingExitCondition(null);
                                               setExitConditionEditValue("");
-                                            }
-                                          }}
+                                }
+                              }}
                                           className="flex-1 text-sm text-[#374151] font-medium border-b-2 border-[#0975d7] focus:outline-none bg-transparent py-1"
-                                          autoFocus
-                                        />
-                                      ) : (
+                              autoFocus
+                            />
+                          ) : (
                                         <div
                                           onClick={() => {
                                             setEditingExitCondition({ id: condition.id, field: "trigger" });
@@ -1414,7 +1420,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                                         />
                                       ) : (
                                         <div
-                                          onClick={() => {
+                            onClick={() => {
                                             setEditingExitCondition({ id: condition.id, field: "action" });
                                             setExitConditionEditValue(condition.action);
                                           }}
@@ -1433,26 +1439,13 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                                     title="Delete condition"
                                   >
                                     <IconTrash className="w-4 h-4 text-[#dc2626]" stroke={2} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                           </div>
                         );
                       })}
-                    </div>
-
-                    {/* Add new condition button */}
-                    <div className="mt-8">
-                      <button
-                        onClick={addExitCondition}
-                        className="w-full py-4 px-6 border-2 border-dashed border-[#d1d5db] rounded-2xl text-[#6b7280] hover:border-[#0975d7] hover:text-[#0975d7] hover:bg-[#f0f7ff] transition-all duration-300 flex items-center justify-center gap-3 group"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-[#f3f4f6] group-hover:bg-[#dbeafe] flex items-center justify-center transition-colors">
-                          <IconPlus className="w-4 h-4" stroke={2} />
-                        </div>
-                        <span className="font-medium">Add exit condition</span>
-                      </button>
                     </div>
 
                     {/* Helper text */}
@@ -1464,8 +1457,8 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
               </div>
             )}
           </div>
-        </div>
-      </div>
+                  </div>
+                </div>
 
       {/* Workflow Selection Modal */}
       {showWorkflowModal && (
@@ -1480,7 +1473,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
               >
                 <IconX className="w-5 h-5 text-[#6b697b]" stroke={2} />
               </button>
-            </div>
+                  </div>
 
             {/* Modal Content */}
             <div className="flex-1 overflow-hidden flex flex-col">
@@ -1517,7 +1510,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                     className="w-[220px] pl-3 pr-10 py-2 text-sm border border-[#d7d6d1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 focus:border-[#0975d7]"
                   />
                   <IconSearch className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b697b]" stroke={2} />
-                </div>
+              </div>
               </div>
 
               {/* Workflow List */}
@@ -1550,13 +1543,13 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                         >
                           {selectedWorkflowId === workflow.id && (
                             <div className="w-2 h-2 rounded-full bg-white" />
-                          )}
-                        </div>
-                      </div>
+            )}
+          </div>
+        </div>
                     </label>
                   ))}
-              </div>
-            </div>
+      </div>
+    </div>
 
             {/* Modal Footer */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-[#eee] bg-[#fafafa]">
