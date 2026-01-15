@@ -52,7 +52,7 @@ export default function App() {
         This is a preliminary exploration, not to be considered final.
       </div>
       <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
+        <Sidebar onNavigateToDashboard={() => setCurrentScreen("dashboard")} />
         <div className="flex-1 flex flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           {currentScreen === "dashboard" && (

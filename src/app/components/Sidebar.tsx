@@ -3,14 +3,21 @@ import imgImage7 from "@/assets/9fd108fffcc9a09175ecdd31b797649bb5abc594.png";
 import imgAvatar from "@/assets/3c37e63c6742aa8bdee80dfefd60ca99840641a4.png";
 import { IconLayoutGrid, IconChartBar, IconChevronDown, IconSettings, IconBell, IconBook, IconMessage } from "@tabler/icons-react";
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavigateToDashboard?: () => void;
+}
+
+export function Sidebar({ onNavigateToDashboard }: SidebarProps) {
   return (
     <div className="bg-[#1f1f32] flex flex-col h-screen items-start px-0 py-[8px] shrink-0 w-[240px] overflow-y-auto">
       {/* Logo Section */}
       <div className="bg-[#1f1f32] relative shrink-0 w-full">
         <div className="flex flex-row items-center size-full">
           <div className="content-stretch flex items-center px-[12px] py-[8px] relative w-full">
-            <div className="basis-0 bg-[#1f1f32] content-stretch flex grow items-center justify-between min-h-px min-w-px relative rounded-[8px] shrink-0">
+            <div 
+              className="basis-0 bg-[#1f1f32] content-stretch flex grow items-center justify-between min-h-px min-w-px relative rounded-[8px] shrink-0 cursor-pointer hover:bg-[#2a2a3f] transition-colors"
+              onClick={onNavigateToDashboard}
+            >
               <div className="content-stretch flex items-center relative shrink-0">
                 <div className="content-stretch flex flex-col items-center justify-center relative shrink-0 size-[44px]">
                   <div className="relative shrink-0 size-[22px]">
