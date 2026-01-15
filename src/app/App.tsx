@@ -46,9 +46,14 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen flex bg-[#fcfcfd] overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-[#fcfcfd] overflow-hidden">
+      {/* Preliminary Exploration Banner */}
+      <div className="w-full bg-yellow-400 text-[#3d3c52] py-2 px-4 text-center text-sm font-medium shrink-0 z-50">
+        This is a preliminary exploration, not to be considered final.
+      </div>
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           {currentScreen === "dashboard" && (
             <Dashboard
@@ -96,6 +101,7 @@ export default function App() {
             </div>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </div>
   );
