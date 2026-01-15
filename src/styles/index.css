@@ -1,0 +1,117 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* Ensure full height layout */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2b2b40;
+  margin-bottom: 12px;
+  margin-top: 0;
+  line-height: 32px;
+}
+
+.ProseMirror h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2b2b40;
+  margin-bottom: 12px;
+  margin-top: 24px;
+  line-height: 24px;
+}
+
+.ProseMirror h2:first-child {
+  margin-top: 0;
+}
+
+.ProseMirror h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2b2b40;
+  margin-bottom: 10px;
+  margin-top: 20px;
+  line-height: 22px;
+}
+
+.ProseMirror h3:first-child {
+  margin-top: 0;
+}
+
+.ProseMirror p {
+  font-size: 14px;
+  line-height: 20px;
+  color: #525066;
+  margin-bottom: 24px;
+}
+
+.ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror a {
+  color: #0975d7;
+  text-decoration: underline;
+}
+
+.ProseMirror strong {
+  font-weight: 600;
+}
+
+.ProseMirror em {
+  font-style: italic;
+}
+
+.ProseMirror u {
+  text-decoration: underline;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+
+.ProseMirror ul li {
+  list-style-type: disc;
+}
+
+.ProseMirror ol li {
+  list-style-type: decimal;
+}
+
+.ProseMirror code {
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.ProseMirror pre {
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.ProseMirror pre code {
+  background-color: transparent;
+  padding: 0;
+}
