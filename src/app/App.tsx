@@ -5,8 +5,10 @@ import { ScenarioBuilder } from "@/app/components/ScenarioBuilder";
 import { PromptScreen } from "@/app/components/PromptScreen";
 import { ScenarioDetailScreen } from "@/app/components/ScenarioDetailScreen";
 import { Sidebar } from "@/app/components/Sidebar";
+import { SettingsSidebar } from "@/app/components/SettingsSidebar";
+import { Competencies } from "@/app/components/Competencies";
 
-type Screen = "dashboard" | "roleplay" | "prompt" | "simulation" | "scenarioDetail";
+type Screen = "dashboard" | "roleplay" | "prompt" | "simulation" | "scenarioDetail" | "competencies";
 
 interface AttachedRoleplay {
   workflowId: string;
@@ -17,6 +19,7 @@ interface AttachedRoleplay {
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("dashboard");
   const [attachedRoleplays, setAttachedRoleplays] = useState<AttachedRoleplay[]>([]);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleGenerateScenario = () => {
     // Simulate loading time before navigating to the detail screen
@@ -51,8 +54,22 @@ export default function App() {
       <div className="w-full bg-yellow-400 text-[#3d3c52] py-2 px-4 text-center text-sm font-medium shrink-0 z-50">
         This is a preliminary exploration, not to be considered final.
       </div>
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar onNavigateToDashboard={() => setCurrentScreen("dashboard")} />
+      <div className="flex-1 flex overflow-hidden relative">
+        <Sidebar 
+          onNavigateToDashboard={() => setCurrentScreen("dashboard")} 
+          onSettingsClick={() => setIsSettingsOpen(!isSettingsOpen)}
+          isSettingsActive={isSettingsOpen || currentScreen === "competencies"}
+          isWorkflowsActive={currentScreen === "dashboard" || currentScreen === "roleplay" || currentScreen === "prompt" || currentScreen === "scenarioDetail"}
+        />
+        {isSettingsOpen && (
+          <SettingsSidebar 
+            onClose={() => setIsSettingsOpen(false)}
+            onCompetenciesClick={() => {
+              setIsSettingsOpen(false);
+              setCurrentScreen("competencies");
+            }}
+          />
+        )}
         <div className="flex-1 flex flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           {currentScreen === "dashboard" && (
@@ -99,6 +116,9 @@ export default function App() {
                 </button>
               </div>
             </div>
+          )}
+          {currentScreen === "competencies" && (
+            <Competencies key="competencies" />
           )}
         </AnimatePresence>
         </div>

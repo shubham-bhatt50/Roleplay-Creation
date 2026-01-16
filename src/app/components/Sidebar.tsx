@@ -5,9 +5,12 @@ import { IconLayoutGrid, IconChartBar, IconChevronDown, IconSettings, IconBell, 
 
 interface SidebarProps {
   onNavigateToDashboard?: () => void;
+  onSettingsClick?: () => void;
+  isSettingsActive?: boolean;
+  isWorkflowsActive?: boolean;
 }
 
-export function Sidebar({ onNavigateToDashboard }: SidebarProps) {
+export function Sidebar({ onNavigateToDashboard, onSettingsClick, isSettingsActive, isWorkflowsActive = true }: SidebarProps) {
   return (
     <div className="bg-[#1f1f32] flex flex-col h-screen items-start px-0 py-[8px] shrink-0 w-[240px] overflow-y-auto">
       {/* Logo Section */}
@@ -74,17 +77,22 @@ export function Sidebar({ onNavigateToDashboard }: SidebarProps) {
       {/* Main Nav Items */}
       <div className="bg-[#1f1f32] relative shrink-0 w-full">
         <div className="content-stretch flex flex-col gap-[4px] items-start px-[12px] py-[8px] relative w-full">
-          {/* Workflows - Active */}
-          <div className="bg-[#3d3c52] relative rounded-[8px] shrink-0 w-full">
-            <div className="flex flex-row items-center overflow-clip rounded-[inherit] size-full">
+          {/* Workflows */}
+          <div 
+            className={`relative shrink-0 w-full ${isWorkflowsActive ? 'bg-[#3d3c52] rounded-[8px]' : ''}`}
+            onClick={onNavigateToDashboard}
+          >
+            <div className="flex flex-row items-center overflow-clip rounded-[inherit] size-full cursor-pointer hover:bg-[#2a2a3f] transition-colors">
               <div className="content-stretch flex items-center pl-0 pr-[12px] py-0 relative w-full">
                 <div className="content-stretch flex gap-[8px] items-center justify-center p-[10px] relative rounded-[8px] shrink-0">
-                  <IconLayoutGrid className="size-[24px] text-[#F58857]" stroke={2} />
+                  <IconLayoutGrid className={`size-[24px] ${isWorkflowsActive ? 'text-[#F58857]' : 'text-[#DFDDE7]'}`} stroke={2} />
                 </div>
-                <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] not-italic relative shrink-0 text-[#fff8f5] text-[14px] text-nowrap">Workflows</p>
+                <p className={`font-['Inter:Medium',sans-serif] font-medium leading-[20px] not-italic relative shrink-0 text-[14px] text-nowrap ${isWorkflowsActive ? 'text-[#fff8f5]' : 'text-[#ececf3]'}`}>Workflows</p>
               </div>
             </div>
-            <div aria-hidden="true" className="absolute border border-[#525066] border-solid inset-0 pointer-events-none rounded-[8px]" />
+            {isWorkflowsActive && (
+              <div aria-hidden="true" className="absolute border border-[#525066] border-solid inset-0 pointer-events-none rounded-[8px]" />
+            )}
           </div>
 
           {/* Analytics */}
@@ -100,15 +108,21 @@ export function Sidebar({ onNavigateToDashboard }: SidebarProps) {
           </div>
 
           {/* Settings */}
-          <div className="relative shrink-0 w-full">
-            <div className="flex flex-row items-center overflow-clip rounded-[inherit] size-full">
+          <div 
+            className={`relative shrink-0 w-full ${isSettingsActive ? 'bg-[#3d3c52] rounded-[8px]' : ''}`}
+            onClick={onSettingsClick}
+          >
+            <div className="flex flex-row items-center overflow-clip rounded-[inherit] size-full cursor-pointer hover:bg-[#2a2a3f] transition-colors">
               <div className="content-stretch flex items-center pl-0 pr-[12px] py-0 relative w-full">
                 <div className="content-stretch flex gap-[8px] items-center justify-center p-[10px] relative rounded-[8px] shrink-0">
-                  <IconSettings className="size-[24px] text-[#DFDDE7]" stroke={2} />
+                  <IconSettings className={`size-[24px] ${isSettingsActive ? 'text-[#F58857]' : 'text-[#DFDDE7]'}`} stroke={2} />
                 </div>
-                <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] not-italic relative shrink-0 text-[#ececf3] text-[14px] text-nowrap">Settings</p>
+                <p className={`font-['Inter:Medium',sans-serif] font-medium leading-[20px] not-italic relative shrink-0 text-[14px] text-nowrap ${isSettingsActive ? 'text-[#fff8f5]' : 'text-[#ececf3]'}`}>Settings</p>
               </div>
             </div>
+            {isSettingsActive && (
+              <div aria-hidden="true" className="absolute border border-[#525066] border-solid inset-0 pointer-events-none rounded-[8px]" />
+            )}
           </div>
         </div>
       </div>
