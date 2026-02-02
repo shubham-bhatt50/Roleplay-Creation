@@ -16,12 +16,27 @@ interface AttachedRoleplay {
   scenarioTitle: string;
 }
 
+interface ScenarioData {
+  trainee: string;
+  customerName: string;
+  emotion: string;
+  scenario: string;
+  objective: string;
+  criteria1: string;
+  criteria2: string;
+  criteria3: string;
+  modality: string;
+  difficulty: string;
+}
+
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("dashboard");
   const [attachedRoleplays, setAttachedRoleplays] = useState<AttachedRoleplay[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [scenarioData, setScenarioData] = useState<ScenarioData | null>(null);
 
-  const handleGenerateScenario = () => {
+  const handleGenerateScenario = (data: ScenarioData) => {
+    setScenarioData(data);
     // Simulate loading time before navigating to the detail screen
     setTimeout(() => {
       setCurrentScreen("scenarioDetail");
@@ -101,6 +116,7 @@ export default function App() {
               key="scenarioDetail"
               onBack={() => setCurrentScreen("dashboard")}
               onAttachWorkflow={handleAttachWorkflow}
+              scenarioData={scenarioData}
             />
           )}
           {currentScreen === "simulation" && (

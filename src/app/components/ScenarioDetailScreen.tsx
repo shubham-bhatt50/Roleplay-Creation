@@ -1,6 +1,6 @@
 import svgPaths from "@/imports/svg-t7e50z2hox";
 import imgAlexJonathan from "@/assets/Alex.png";
-import { IconPencil, IconEye, IconArrowRight, IconFileText, IconUser, IconClipboardCheck, IconDoorExit, IconSettings, IconX, IconPlus, IconPhoto, IconMoodAngry, IconMoodSad, IconMoodHappy, IconMoodNeutral, IconAlertCircle, IconClock, IconFlame, IconMoodCrazyHappy, IconUsers, IconChevronDown, IconTrash, IconCheck, IconPlayerStop, IconMessage, IconPhoneOff, IconUserUp, IconTimeDuration10, IconSearch, IconRefresh } from "@tabler/icons-react";
+import { IconPencil, IconEye, IconArrowRight, IconArrowLeft, IconFileText, IconUser, IconClipboardCheck, IconDoorExit, IconSettings, IconX, IconPlus, IconPhoto, IconMoodAngry, IconMoodSad, IconMoodHappy, IconMoodNeutral, IconAlertCircle, IconClock, IconFlame, IconUsers, IconChevronDown, IconTrash, IconCheck, IconPlayerStop, IconPhoneOff, IconUserUp, IconTimeDuration10, IconSearch, IconDeviceFloppy, IconDownload, IconUserPlus } from "@tabler/icons-react";
 import { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -8,9 +8,23 @@ import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Link from '@tiptap/extension-link';
 
+interface ScenarioData {
+  trainee: string;
+  customerName: string;
+  emotion: string;
+  scenario: string;
+  objective: string;
+  criteria1: string;
+  criteria2: string;
+  criteria3: string;
+  modality: string;
+  difficulty: string;
+}
+
 interface ScenarioDetailScreenProps {
   onBack: () => void;
   onAttachWorkflow?: (workflowId: string, workflowName: string) => void;
+  scenarioData?: ScenarioData | null;
 }
 
 type TabType = "scenario" | "persona" | "evaluation" | "exit" | "settings";
@@ -26,11 +40,65 @@ const availableWorkflows = [
   { id: "7", name: "Update payment | Billing system", type: "Workflow" },
 ];
 
-export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetailScreenProps) {
+export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData }: ScenarioDetailScreenProps) {
   const [activeTab, setActiveTab] = useState<TabType>("scenario");
   const [activeMode, setActiveMode] = useState<"voice" | "chat" | "hybrid">("voice");
-  const [scenarioTitle, setScenarioTitle] = useState("Dealing with angry customer for refund scenario");
+  const getDefaultTitle = (data: ScenarioData | null | undefined): string => {
+    if (!data) return "Dealing with angry customer for refund scenario";
+    return `${data.customerName} - ${data.emotion} customer scenario`;
+  };
+
+  const [scenarioTitle, setScenarioTitle] = useState(getDefaultTitle(scenarioData));
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+
+  // Generate detailed scenario content based on scenario data
+  const generateScenarioContent = (data: ScenarioData | null | undefined): string => {
+    if (!data) {
+      return `
+      <h2>Scenario</h2>
+      <p>You are <strong>Alex</strong>, a customer who is <strong>frustrated</strong> and contacting customer support because you want a full refund for a product you recently bought. You expect a quick resolution and are feeling upset about the situation.</p>
+      
+      <p>Your emotional state is <strong>frustrated</strong>, which means you may express your concerns with some intensity. You should communicate your need for a full refund clearly and firmly, while also expressing your dissatisfaction with the product or service you received.</p>
+    `;
+    }
+
+    const modalityText = data.modality === "Audio" ? "phone call" : "chat conversation";
+    const difficultyText = data.difficulty === "High" ? "challenging" : data.difficulty === "Medium" ? "moderate" : "straightforward";
+    const emotionLower = data.emotion.toLowerCase();
+    
+    // Get emotion-specific behavior guidance
+    const getEmotionGuidance = (emotion: string): string => {
+      const lower = emotion.toLowerCase();
+      if (lower.includes("angry") || lower.includes("frustrated")) {
+        return "You may express your concerns with intensity and may be less patient with responses. You should communicate firmly and may show signs of irritation if the conversation doesn't progress quickly.";
+      }
+      if (lower.includes("confused")) {
+        return "You may ask clarifying questions frequently and need more explanation. You should express uncertainty and seek reassurance about the process.";
+      }
+      if (lower.includes("disappointed") || lower.includes("sad")) {
+        return "You may express your concerns with a more subdued tone, showing disappointment. You should communicate your needs clearly but may sound less energetic or enthusiastic.";
+      }
+      if (lower.includes("anxious")) {
+        return "You may express urgency and concern about the situation. You should communicate your needs clearly while potentially showing signs of worry or stress.";
+      }
+      return "You should communicate your needs clearly and express your emotional state authentically throughout the conversation.";
+    };
+    
+    const scenarioContent = `
+      <h2>Scenario</h2>
+      <p>You are <strong>${data.customerName}</strong>, a customer who is <strong>${emotionLower}</strong> and contacting a <strong>${data.trainee}</strong> via ${modalityText} because ${data.scenario}. You expect a quick resolution and are feeling ${emotionLower} about the situation.</p>
+      
+      <p>Your emotional state is <strong>${emotionLower}</strong>, which means ${getEmotionGuidance(data.emotion)} Throughout the ${modalityText}, you should maintain this emotional tone and respond authentically to the support representative's attempts to help you.</p>
+      
+      <p>This is a ${difficultyText} scenario, which means the interaction may involve ${data.difficulty === "High" ? "complex issues that require multiple steps to resolve, potential pushback, or situations where you may need to advocate strongly for your position" : data.difficulty === "Medium" ? "moderate complexity where some negotiation or clarification may be needed" : "relatively straightforward issues that should be resolvable with clear communication"}. The interaction will take place via ${modalityText}, so you should communicate in a manner appropriate for this ${data.modality.toLowerCase()} format.</p>
+      
+      <p>Your primary goal is to ${data.scenario}. You should express this need clearly and persistently, while also responding naturally to the support representative's questions and attempts to resolve your issue. Remember to stay in character as someone who is ${emotionLower} and maintain that emotional state throughout the conversation.</p>
+      
+      <p>As the AI playing ${data.customerName}, your role is to provide a realistic, ${emotionLower} customer experience. The ${data.difficulty.toLowerCase()} difficulty level means you should ${data.difficulty === "High" ? "present more complex challenges, potentially escalate if not handled well, and require the learner to work harder to resolve the situation" : data.difficulty === "Medium" ? "present moderate challenges that require some skill to navigate" : "present straightforward challenges that allow the learner to demonstrate basic competency"}.</p>
+    `;
+
+    return scenarioContent;
+  };
 
   // Workflow modal state
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
@@ -111,6 +179,162 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
   } | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [openCompetencyDropdown, setOpenCompetencyDropdown] = useState<string | null>(null);
+
+  // Evaluation Template management
+  interface EvaluationTemplate {
+    id: string;
+    name: string;
+    description: string;
+    parameters: Omit<EvaluationParameter, 'id'>[];
+  }
+
+  const [evaluationTemplates, setEvaluationTemplates] = useState<EvaluationTemplate[]>([
+    {
+      id: "et1",
+      name: "Customer support basics",
+      description: "Essential evaluation criteria for customer support",
+      parameters: [
+        {
+          title: "Empathy and Active Listening",
+          criteria: [
+            "0-2: Fails to acknowledge user feelings, interrupts frequently, and dismisses concerns.",
+            "3-4: Shows limited empathy; listens but lacks understanding; responses often miss the mark.",
+            "5-6: Generally empathetic, listens actively; addresses some concerns but could improve.",
+            "7-8: Demonstrates strong empathy, listens attentively; addresses user's feelings effectively.",
+            "9-10: Exceptional empathy, fully engaged listening; validates feelings and addresses all concerns thoroughly.",
+          ],
+          mappedCompetency: "Empathy",
+        },
+        {
+          title: "Problem-Solving and Resolution Skills",
+          criteria: [
+            "0-2: Offers no relevant solutions; escalates without assessing user's needs.",
+            "3-4: Suggests limited solutions that may not address the core issue; slow to act.",
+            "5-6: Provides reasonable solutions with some effectiveness; may require guidance.",
+            "7-8: Efficiently identifies issues and suggests effective solutions; user feels supported.",
+            "9-10: Proactively resolves issues with innovative solutions; user feels fully satisfied and valued.",
+          ],
+          mappedCompetency: "Resolution",
+        },
+      ],
+    },
+    {
+      id: "et2",
+      name: "Sales performance",
+      description: "Evaluation metrics for sales conversations",
+      parameters: [
+        {
+          title: "Product Knowledge",
+          criteria: [
+            "0-2: Cannot explain product features; lacks basic understanding.",
+            "3-4: Knows basic features but struggles with details; may provide inaccurate information.",
+            "5-6: Good understanding of product features; can handle most questions.",
+            "7-8: Strong product knowledge; explains features confidently and accurately.",
+            "9-10: Expert-level knowledge; anticipates questions and provides comprehensive information.",
+          ],
+          mappedCompetency: "Knowledge",
+        },
+        {
+          title: "Objection Handling",
+          criteria: [
+            "0-2: Cannot address objections; becomes defensive or dismissive.",
+            "3-4: Attempts to address objections but lacks persuasion; may give up easily.",
+            "5-6: Handles common objections adequately; uses some persuasion techniques.",
+            "7-8: Skilled at addressing objections; turns concerns into opportunities.",
+            "9-10: Expert objection handler; uses advanced techniques to build trust and close deals.",
+          ],
+          mappedCompetency: "Communication",
+        },
+      ],
+    },
+    {
+      id: "et3",
+      name: "Technical support",
+      description: "Evaluation for technical troubleshooting scenarios",
+      parameters: [
+        {
+          title: "Technical Expertise",
+          criteria: [
+            "0-2: Unable to diagnose issues; lacks technical understanding.",
+            "3-4: Can identify simple issues but struggles with complex problems.",
+            "5-6: Solid technical knowledge; resolves most common issues.",
+            "7-8: Strong technical skills; efficiently diagnoses and resolves complex issues.",
+            "9-10: Expert technician; handles advanced issues and provides thorough explanations.",
+          ],
+          mappedCompetency: "Product Knowledge",
+        },
+        {
+          title: "Clear Communication",
+          criteria: [
+            "0-2: Uses jargon; confuses customers; cannot simplify explanations.",
+            "3-4: Sometimes unclear; inconsistent in explaining technical concepts.",
+            "5-6: Generally clear communication; adapts language to customer level.",
+            "7-8: Excellent at explaining technical concepts in simple terms.",
+            "9-10: Outstanding communicator; makes complex topics accessible to anyone.",
+          ],
+          mappedCompetency: "Communication",
+        },
+      ],
+    },
+  ]);
+
+  const [showEvaluationTemplateMenu, setShowEvaluationTemplateMenu] = useState(false);
+  const [evaluationMenuView, setEvaluationMenuView] = useState<"main" | "load" | "save">("main");
+  const [newEvaluationTemplateName, setNewEvaluationTemplateName] = useState("");
+  const [newEvaluationTemplateDescription, setNewEvaluationTemplateDescription] = useState("");
+  const [collapsedEvalParams, setCollapsedEvalParams] = useState<string[]>([]);
+
+  // Change tracking for sections
+  const [savedEvaluationParameters, setSavedEvaluationParameters] = useState<EvaluationParameter[]>(evaluationParameters);
+  const [isSavingEvaluation, setIsSavingEvaluation] = useState(false);
+
+  // Check if evaluation parameters have unsaved changes
+  const hasEvaluationChanges = JSON.stringify(evaluationParameters) !== JSON.stringify(savedEvaluationParameters);
+
+  // Save evaluation changes
+  const saveEvaluationChanges = () => {
+    setIsSavingEvaluation(true);
+    // Simulate API call delay
+    setTimeout(() => {
+      setSavedEvaluationParameters([...evaluationParameters]);
+      setIsSavingEvaluation(false);
+    }, 500);
+  };
+
+  // Discard evaluation changes
+  const discardEvaluationChanges = () => {
+    setEvaluationParameters([...savedEvaluationParameters]);
+  };
+
+  const loadEvaluationFromTemplate = (template: EvaluationTemplate) => {
+    const newParameters: EvaluationParameter[] = template.parameters.map((param, index) => ({
+      id: String(Date.now() + index),
+      ...param,
+    }));
+    setEvaluationParameters([...newParameters, ...evaluationParameters]);
+    setShowEvaluationTemplateMenu(false);
+    setEvaluationMenuView("main");
+  };
+
+  const saveEvaluationAsTemplate = () => {
+    if (!newEvaluationTemplateName.trim()) return;
+    
+    const newTemplate: EvaluationTemplate = {
+      id: String(Date.now()),
+      name: newEvaluationTemplateName.trim(),
+      description: newEvaluationTemplateDescription.trim() || `Template with ${evaluationParameters.length} parameters`,
+      parameters: evaluationParameters.map(({ title, criteria, mappedCompetency }) => ({
+        title,
+        criteria,
+        mappedCompetency,
+      })),
+    };
+    setEvaluationTemplates([...evaluationTemplates, newTemplate]);
+    setNewEvaluationTemplateName("");
+    setNewEvaluationTemplateDescription("");
+    setShowEvaluationTemplateMenu(false);
+    setEvaluationMenuView("main");
+  };
 
   // Handle clicking outside competency dropdowns
   useEffect(() => {
@@ -244,50 +468,223 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
   interface Persona {
     id: string;
     name: string;
+    gender: string;
+    age: number;
+    location: string;
     avatar: string | null;
     emotionalStates: string[];
     behavioralTraits: string[];
-    reasonForContact: string;
-    likelyBehaviour: string;
+    additionalRemarks: string;
   }
 
   const [personas, setPersonas] = useState<Persona[]>([
     {
       id: "1",
-      name: "Alex Jonathan",
+      name: "Alex",
+      gender: "Male",
+      age: 25,
+      location: "Minnesota",
       avatar: imgAlexJonathan,
       emotionalStates: ["Frustrated", "Angry"],
-      behavioralTraits: ["Short-tempered", "Angry"],
-      reasonForContact: "Wants a full refund for a product they bought",
-      likelyBehaviour: "Wants a full refund for a product they bought",
+      behavioralTraits: ["Short-tempered", "Impatient"],
+      additionalRemarks: "A dissatisfied customer who wants a full refund for a product they bought. May escalate if not handled properly and expects immediate resolution. Has been a customer for 2 years.",
     },
     {
       id: "2",
-      name: "Sarah Williams",
+      name: "Jordan",
+      gender: "Non-binary",
+      age: 30,
+      location: "California",
       avatar: null,
       emotionalStates: ["Neutral", "Calm"],
       behavioralTraits: ["Patient", "Polite"],
-      reasonForContact: "Inquiring about product features and pricing",
-      likelyBehaviour: "Will ask detailed questions and compare options",
+      additionalRemarks: "Inquiring about product features and pricing. Will ask detailed questions and compare options before making a decision. Values transparency and good service.",
     },
     {
       id: "3",
-      name: "Michael Chen",
+      name: "Sam",
+      gender: "Female",
+      age: 28,
+      location: "Texas",
       avatar: null,
       emotionalStates: ["Happy", "Excited"],
       behavioralTraits: ["Enthusiastic", "Eager"],
-      reasonForContact: "Wants to upgrade to a premium plan",
-      likelyBehaviour: "Will be receptive to upsells and recommendations",
+      additionalRemarks: "Wants to upgrade to a premium plan. Will be receptive to upsells and recommendations. Loves the product and has referred friends.",
+    },
+    {
+      id: "4",
+      name: "Taylor",
+      gender: "Male",
+      age: 35,
+      location: "New York",
+      avatar: null,
+      emotionalStates: ["Confused", "Anxious"],
+      behavioralTraits: ["Uncertain", "Needs reassurance"],
+      additionalRemarks: "Technical issue with the product. Will need step-by-step guidance and patience. First-time user who is not tech-savvy.",
+    },
+    {
+      id: "5",
+      name: "Morgan",
+      gender: "Female",
+      age: 22,
+      location: "Florida",
+      avatar: null,
+      emotionalStates: ["Disappointed", "Sad"],
+      behavioralTraits: ["Loyal", "Expects better"],
+      additionalRemarks: "Had a bad experience after years of being a customer. Will reference past positive experiences and expects acknowledgment of loyalty. Long-term customer since 2019.",
     },
   ]);
 
   const [currentPersonaId, setCurrentPersonaId] = useState("1");
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showPersonaMenu, setShowPersonaMenu] = useState(false);
+  const [personaMenuView, setPersonaMenuView] = useState<"main" | "switch" | "load" | "save">("main");
   const [editingField, setEditingField] = useState<string | null>(null);
-  const [newTag, setNewTag] = useState("");
-  const [newTagType, setNewTagType] = useState<"emotional" | "behavioral" | null>(null);
+  const [showEmotionalDropdown, setShowEmotionalDropdown] = useState(false);
+  const [showBehavioralDropdown, setShowBehavioralDropdown] = useState(false);
+
+  // Predefined options for emotional states and behavioral traits
+  const emotionalStateOptions = [
+    "Frustrated",
+    "Angry",
+    "Confused",
+    "Anxious",
+    "Disappointed",
+    "Sad",
+    "Happy",
+    "Excited",
+    "Neutral",
+    "Calm",
+    "Impatient",
+    "Worried",
+  ];
+
+  const behavioralTraitOptions = [
+    "Short-tempered",
+    "Impatient",
+    "Patient",
+    "Polite",
+    "Aggressive",
+    "Enthusiastic",
+    "Eager",
+    "Uncertain",
+    "Needs reassurance",
+    "Loyal",
+    "Expects better",
+    "Demanding",
+    "Cooperative",
+    "Reserved",
+  ];
+
+  // Template management
+  interface PersonaTemplate {
+    id: string;
+    name: string;
+    description: string;
+    persona: Omit<Persona, 'id'>;
+  }
+
+  const [personaTemplates, setPersonaTemplates] = useState<PersonaTemplate[]>([
+    {
+      id: "t1",
+      name: "Angry refund seeker",
+      description: "A frustrated customer demanding a refund",
+      persona: {
+        name: "Alex",
+        gender: "Male",
+        age: 25,
+        location: "Minnesota",
+        avatar: null,
+        emotionalStates: ["Frustrated", "Angry"],
+        behavioralTraits: ["Short-tempered", "Impatient"],
+        additionalRemarks: "Wants a full refund for a product they bought. May escalate if not handled properly, expects immediate resolution.",
+      },
+    },
+    {
+      id: "t2",
+      name: "Confused first-timer",
+      description: "A new customer needing guidance",
+      persona: {
+        name: "Jamie",
+        gender: "Non-binary",
+        age: 24,
+        location: "Seattle",
+        avatar: null,
+        emotionalStates: ["Confused", "Anxious"],
+        behavioralTraits: ["Uncertain", "Needs reassurance"],
+        additionalRemarks: "First time using the product and needs help getting started. Will ask many questions, needs patient explanations.",
+      },
+    },
+    {
+      id: "t3",
+      name: "Disappointed loyalist",
+      description: "A long-time customer who feels let down",
+      persona: {
+        name: "Morgan",
+        gender: "Female",
+        age: 45,
+        location: "Chicago",
+        avatar: null,
+        emotionalStates: ["Disappointed", "Sad"],
+        behavioralTraits: ["Loyal", "Expects better"],
+        additionalRemarks: "Had a bad experience after years of being a customer. Will reference past positive experiences, expects acknowledgment.",
+      },
+    },
+    {
+      id: "t4",
+      name: "Happy upgrader",
+      description: "An enthusiastic customer wanting to upgrade",
+      persona: {
+        name: "Taylor",
+        gender: "Male",
+        age: 32,
+        location: "Austin",
+        avatar: null,
+        emotionalStates: ["Happy", "Excited"],
+        behavioralTraits: ["Enthusiastic", "Eager"],
+        additionalRemarks: "Wants to upgrade to a premium plan. Will be receptive to upsells and recommendations.",
+      },
+    },
+  ]);
+
+  const [newTemplateName, setNewTemplateName] = useState("");
+  const [newTemplateDescription, setNewTemplateDescription] = useState("");
 
   const currentPersona = personas.find(p => p.id === currentPersonaId) || personas[0];
+
+  const loadFromTemplate = (template: PersonaTemplate) => {
+    const newId = String(Date.now());
+    const newPersona: Persona = {
+      id: newId,
+      ...template.persona,
+    };
+    setPersonas([...personas, newPersona]);
+    setCurrentPersonaId(newId);
+    setShowPersonaMenu(false);
+  };
+
+  const saveAsTemplate = () => {
+    if (!newTemplateName.trim()) return;
+    
+    const newTemplate: PersonaTemplate = {
+      id: String(Date.now()),
+      name: newTemplateName.trim(),
+      description: newTemplateDescription.trim() || `Template based on ${currentPersona.name}`,
+      persona: {
+        name: currentPersona.name,
+        gender: currentPersona.gender,
+        age: currentPersona.age,
+        location: currentPersona.location,
+        avatar: null, // Don't save avatar in templates
+        emotionalStates: currentPersona.emotionalStates,
+        behavioralTraits: currentPersona.behavioralTraits,
+        additionalRemarks: currentPersona.additionalRemarks,
+      },
+    };
+    setPersonaTemplates([...personaTemplates, newTemplate]);
+    setNewTemplateName("");
+    setNewTemplateDescription("");
+    setShowPersonaMenu(false);
+  };
 
   const updateCurrentPersona = (updates: Partial<Persona>) => {
     setPersonas(personas.map(p => 
@@ -299,8 +696,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
   const setPersonaAvatar = (avatar: string | null) => updateCurrentPersona({ avatar });
   const setEmotionalStates = (states: string[]) => updateCurrentPersona({ emotionalStates: states });
   const setBehavioralTraits = (traits: string[]) => updateCurrentPersona({ behavioralTraits: traits });
-  const setReasonForContact = (reason: string) => updateCurrentPersona({ reasonForContact: reason });
-  const setLikelyBehaviour = (behaviour: string) => updateCurrentPersona({ likelyBehaviour: behaviour });
+  const setAdditionalRemarks = (remarks: string) => updateCurrentPersona({ additionalRemarks: remarks });
 
   // Helper functions for tag icons and colors
   const getEmotionalIcon = (state: string) => {
@@ -386,22 +782,44 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
         },
       }),
     ],
-    content: `
-      <h2>Learner Brief</h2>
-      <p>You are a Customer Support Executive handling incoming support requests. A customer is reaching out regarding a refund for a product they purchased.</p>
-      
-      <h2>Scenario</h2>
-      <p>A customer named Alex is contacting support to request a full refund for a product they recently bought. Alex is frustrated and expects a quick resolution. Your job is to handle this conversation professionally while following company policy.</p>
-      
-      <h2>Learning objective</h2>
-      <p>The learner should de-escalate the situation—calm the customer down, acknowledge their concerns, and guide the conversation toward a resolution while maintaining professionalism.</p>
-    `,
+    content: generateScenarioContent(scenarioData),
     editorProps: {
       attributes: {
         class: 'focus:outline-none prose prose-sm max-w-none',
       },
     },
   });
+
+  // Update editor content when scenarioData changes
+  useEffect(() => {
+    if (editor) {
+      if (scenarioData) {
+        editor.commands.setContent(generateScenarioContent(scenarioData));
+        setScenarioTitle(getDefaultTitle(scenarioData));
+      }
+    }
+  }, [scenarioData, editor]);
+
+  // Sync persona changes with scenario content
+  useEffect(() => {
+    if (editor && currentPersona) {
+      // Update scenario content to reflect persona changes
+      const updatedScenarioData: ScenarioData = {
+        trainee: scenarioData?.trainee || "Customer support executives",
+        customerName: currentPersona.name,
+        emotion: currentPersona.emotionalStates[0] || scenarioData?.emotion || "Frustrated",
+        scenario: scenarioData?.scenario || "they want a full refund for a product they bought",
+        objective: scenarioData?.objective || "De-escalate the situation",
+        criteria1: scenarioData?.criteria1 || "Empathy",
+        criteria2: scenarioData?.criteria2 || "De-escalation",
+        criteria3: scenarioData?.criteria3 || "Policy adherence",
+        modality: scenarioData?.modality || "Audio",
+        difficulty: scenarioData?.difficulty || "High",
+      };
+      editor.commands.setContent(generateScenarioContent(updatedScenarioData));
+      setScenarioTitle(`${currentPersona.name} - ${currentPersona.emotionalStates[0] || 'Customer'} scenario`);
+    }
+  }, [currentPersona?.name, currentPersona?.emotionalStates, currentPersona?.gender, currentPersona?.age, currentPersona?.location]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -706,80 +1124,229 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                       <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Customer persona</h2>
                       <p className="text-sm text-[#8d8ba7]">Define who the learner is interacting with</p>
                     </div>
+                    {/* Combined Persona Menu */}
                     <div className="relative">
                       <button
-                        onClick={() => setShowUserDropdown(!showUserDropdown)}
-                        className="flex items-center gap-2 px-3 py-2 border border-[#ececf3] rounded-lg hover:border-[#0975d7] transition-colors bg-white"
+                        onClick={() => {
+                          setShowPersonaMenu(!showPersonaMenu);
+                          setPersonaMenuView("main");
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 border border-[#ececf3] rounded-lg hover:border-[#0975d7] hover:bg-[#f8fafc] transition-colors bg-white"
                       >
-                        <IconUsers className="w-4 h-4 text-[#8d8ba7]" stroke={2} />
-                        <span className="text-sm font-medium text-[#2b2b40]">Switch user</span>
-                        <IconChevronDown className={`w-4 h-4 text-[#8d8ba7] transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} stroke={2} />
+                        <IconUser className="w-4 h-4 text-[#0975d7]" stroke={2} />
+                        <span className="text-sm font-medium text-[#2b2b40]">Manage persona</span>
+                        <IconChevronDown className={`w-4 h-4 text-[#8d8ba7] transition-transform ${showPersonaMenu ? 'rotate-180' : ''}`} stroke={2} />
                       </button>
-                      {showUserDropdown && (
+                      {showPersonaMenu && (
                         <>
                           <div
                             className="fixed inset-0 z-10"
-                            onClick={() => setShowUserDropdown(false)}
+                            onClick={() => {
+                              setShowPersonaMenu(false);
+                              setPersonaMenuView("main");
+                            }}
                           />
-                          <div className="absolute right-0 mt-2 w-64 bg-white border border-[#ececf3] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
+                          <div className="absolute right-0 mt-2 w-72 bg-white border border-[#ececf3] rounded-xl shadow-xl z-20 overflow-hidden">
+                            {personaMenuView === "main" && (
+                              <div className="py-2">
+                                <button
+                                  onClick={() => setPersonaMenuView("switch")}
+                                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f5f7fa] transition-colors"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-[#f0f4ff] flex items-center justify-center">
+                                    <IconUsers className="w-4 h-4 text-[#0975d7]" stroke={2} />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-[#2b2b40]">Switch persona</p>
+                                    <p className="text-xs text-[#8d8ba7]">Change to another persona</p>
+                                  </div>
+                                  <IconArrowRight className="w-4 h-4 text-[#8d8ba7]" stroke={2} />
+                                </button>
+                                <button
+                                  onClick={() => setPersonaMenuView("load")}
+                                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f5f7fa] transition-colors"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-[#f0fff4] flex items-center justify-center">
+                                    <IconDownload className="w-4 h-4 text-[#10b981]" stroke={2} />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-[#2b2b40]">Load template</p>
+                                    <p className="text-xs text-[#8d8ba7]">Use a saved template</p>
+                                  </div>
+                                  <IconArrowRight className="w-4 h-4 text-[#8d8ba7]" stroke={2} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setPersonaMenuView("save");
+                                    setNewTemplateName(currentPersona.name + " template");
+                                    setNewTemplateDescription("");
+                                  }}
+                                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f5f7fa] transition-colors"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-[#fef3c7] flex items-center justify-center">
+                                    <IconDeviceFloppy className="w-4 h-4 text-[#d97706]" stroke={2} />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-[#2b2b40]">Save as template</p>
+                                    <p className="text-xs text-[#8d8ba7]">Save current persona</p>
+                                  </div>
+                                  <IconArrowRight className="w-4 h-4 text-[#8d8ba7]" stroke={2} />
+                                </button>
+                                <div className="border-t border-[#ececf3] mt-2 pt-2">
+                                  <button
+                                    onClick={() => {
+                                      const newId = String(Date.now());
+                                      const newPersona: Persona = {
+                                        id: newId,
+                                        name: "New Persona",
+                                        gender: "Not specified",
+                                        age: 30,
+                                        location: "Unknown",
+                                        avatar: null,
+                                        emotionalStates: [],
+                                        behavioralTraits: [],
+                                        additionalRemarks: "",
+                                      };
+                                      setPersonas([...personas, newPersona]);
+                                      setCurrentPersonaId(newId);
+                                      setShowPersonaMenu(false);
+                                    }}
+                                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f5f7fa] transition-colors"
+                                  >
+                                    <div className="w-8 h-8 rounded-lg bg-[#f0f0f5] flex items-center justify-center">
+                                      <IconUserPlus className="w-4 h-4 text-[#6b697b]" stroke={2} />
+                                    </div>
+                                    <p className="text-sm font-medium text-[#2b2b40]">Create new persona</p>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {personaMenuView === "switch" && (
+                              <div>
+                                <div className="px-4 py-3 border-b border-[#ececf3] flex items-center gap-2">
+                                  <button onClick={() => setPersonaMenuView("main")} className="p-1 hover:bg-[#f0f0f5] rounded">
+                                    <IconArrowLeft className="w-4 h-4 text-[#6b697b]" stroke={2} />
+                                  </button>
+                                  <span className="text-sm font-medium text-[#2b2b40]">Switch persona</span>
+                                </div>
+                                <div className="max-h-64 overflow-y-auto">
                             {personas.map((persona) => (
                               <button
                                 key={persona.id}
                                 onClick={() => {
                                   setCurrentPersonaId(persona.id);
-                                  setShowUserDropdown(false);
+                                        setShowPersonaMenu(false);
+                                        setPersonaMenuView("main");
                                 }}
-                                className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f0f0f5] transition-colors ${
-                                  currentPersonaId === persona.id ? 'bg-[#f0f0f5]' : ''
+                                      className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f5f7fa] transition-colors ${
+                                        currentPersonaId === persona.id ? 'bg-[#f0f4ff]' : ''
                                 }`}
                               >
                                 {persona.avatar ? (
                                   <img
                                     src={persona.avatar}
                                     alt={persona.name}
-                                    className="w-10 h-10 rounded-lg object-cover"
+                                          className="w-10 h-10 rounded-lg object-cover ring-2 ring-white shadow-sm"
                                   />
                                 ) : (
-                                  <div className="w-10 h-10 rounded-lg bg-[#f0f0f5] flex items-center justify-center">
-                                    <IconUser className="w-5 h-5 text-[#8d8ba7]" stroke={2} />
+                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center shadow-sm">
+                                          <span className="text-sm font-bold text-white">
+                                            {persona.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                          </span>
                                   </div>
                                 )}
-                                <div className="flex-1">
+                                      <div className="flex-1 min-w-0">
                                   <p className={`text-sm font-medium ${currentPersonaId === persona.id ? 'text-[#0975d7]' : 'text-[#2b2b40]'}`}>
                                     {persona.name}
                                   </p>
-                                  <p className="text-xs text-[#8d8ba7] line-clamp-1">
-                                    {persona.reasonForContact}
+                                        <p className="text-xs text-[#8d8ba7]">
+                                          {persona.gender}, {persona.age} yrs, {persona.location}
                                   </p>
                                 </div>
                                 {currentPersonaId === persona.id && (
-                                  <div className="w-2 h-2 rounded-full bg-[#0975d7]" />
+                                        <IconCheck className="w-4 h-4 text-[#0975d7]" stroke={2} />
                                 )}
                               </button>
                             ))}
-                            <div className="border-t border-[#ececf3] px-4 py-2">
+                                </div>
+                              </div>
+                            )}
+                            {personaMenuView === "load" && (
+                              <div>
+                                <div className="px-4 py-3 border-b border-[#ececf3] flex items-center gap-2">
+                                  <button onClick={() => setPersonaMenuView("main")} className="p-1 hover:bg-[#f0f0f5] rounded">
+                                    <IconArrowLeft className="w-4 h-4 text-[#6b697b]" stroke={2} />
+                                  </button>
+                                  <span className="text-sm font-medium text-[#2b2b40]">Load template</span>
+                                </div>
+                                <div className="max-h-64 overflow-y-auto">
+                                  {personaTemplates.map((template) => (
                               <button
+                                      key={template.id}
                                 onClick={() => {
-                                  const newId = String(personas.length + 1);
-                                  const newPersona: Persona = {
-                                    id: newId,
-                                    name: "New Persona",
-                                    avatar: null,
-                                    emotionalStates: [],
-                                    behavioralTraits: [],
-                                    reasonForContact: "",
-                                    likelyBehaviour: "",
-                                  };
-                                  setPersonas([...personas, newPersona]);
-                                  setCurrentPersonaId(newId);
-                                  setShowUserDropdown(false);
-                                }}
-                                className="w-full text-left px-3 py-2 text-sm text-[#0975d7] hover:bg-[#f0f0f5] rounded-lg transition-colors flex items-center gap-2"
-                              >
-                                <IconPlus className="w-4 h-4" stroke={2} />
-                                Add new persona
+                                        loadFromTemplate(template);
+                                        setShowPersonaMenu(false);
+                                        setPersonaMenuView("main");
+                                      }}
+                                      className="w-full text-left px-4 py-3 hover:bg-[#f5f7fa] transition-colors border-b border-[#f5f5f5] last:border-b-0"
+                                    >
+                                      <p className="text-sm font-medium text-[#2b2b40]">{template.name}</p>
+                                      <p className="text-xs text-[#8d8ba7] mt-0.5">{template.description}</p>
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                        {template.persona.emotionalStates.slice(0, 2).map((state, idx) => (
+                                          <span key={idx} className="text-[10px] px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#991b1b]">
+                                            {state}
+                                          </span>
+                                        ))}
+                                      </div>
                               </button>
+                                  ))}
                             </div>
+                              </div>
+                            )}
+                            {personaMenuView === "save" && (
+                              <div>
+                                <div className="px-4 py-3 border-b border-[#ececf3] flex items-center gap-2">
+                                  <button onClick={() => setPersonaMenuView("main")} className="p-1 hover:bg-[#f0f0f5] rounded">
+                                    <IconArrowLeft className="w-4 h-4 text-[#6b697b]" stroke={2} />
+                                  </button>
+                                  <span className="text-sm font-medium text-[#2b2b40]">Save as template</span>
+                                </div>
+                                <div className="p-4 space-y-3">
+                                  <div>
+                                    <label className="block text-xs font-medium text-[#6b697b] mb-1">Template name</label>
+                                    <input
+                                      type="text"
+                                      value={newTemplateName}
+                                      onChange={(e) => setNewTemplateName(e.target.value)}
+                                      placeholder="E.g., Angry refund seeker"
+                                      className="w-full px-3 py-2 text-sm border border-[#d7d6d1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 focus:border-[#0975d7]"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-[#6b697b] mb-1">Description</label>
+                                    <input
+                                      type="text"
+                                      value={newTemplateDescription}
+                                      onChange={(e) => setNewTemplateDescription(e.target.value)}
+                                      placeholder="Brief description..."
+                                      className="w-full px-3 py-2 text-sm border border-[#d7d6d1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 focus:border-[#0975d7]"
+                                    />
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      saveAsTemplate();
+                                      setShowPersonaMenu(false);
+                                      setPersonaMenuView("main");
+                                    }}
+                                    disabled={!newTemplateName.trim()}
+                                    className="w-full py-2 text-sm font-medium text-white bg-[#0975d7] rounded-lg hover:bg-[#0861b8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    Save template
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </>
                       )}
@@ -788,26 +1355,31 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                 </div>
 
                 {/* Persona Card */}
-                <div className="bg-white border-b border-[#eee] py-4">
+                <div className="bg-gradient-to-br from-[#fafbfc] to-white border-b border-[#eee] py-6">
                   <div className="px-6">
-                  <div className="flex items-start gap-6">
+                    {/* Top Row: Avatar + Name/Demographics */}
+                    <div className="flex items-center gap-5 mb-5">
                     {/* Avatar */}
-                    <div className="shrink-0 flex flex-col items-center">
+                      <div className="shrink-0">
                       <div className="relative group">
+                          <div className="w-20 h-20 rounded-xl overflow-hidden shadow-md ring-2 ring-white bg-gradient-to-br from-[#667eea] to-[#764ba2]">
                         {currentPersona.avatar ? (
                           <img
                             src={currentPersona.avatar}
                             alt={currentPersona.name}
-                            className="w-24 h-24 rounded-lg object-cover"
+                                className="w-full h-full object-cover"
+                                style={{ objectPosition: 'center top' }}
                           />
                         ) : (
-                          <div className="w-24 h-24 rounded-lg bg-[#f0f0f5] flex items-center justify-center">
-                            <IconUser className="w-12 h-12 text-[#8d8ba7]" stroke={2} />
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className="text-xl font-bold text-white">
+                                  {currentPersona.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </span>
                           </div>
                         )}
+                          </div>
                         <button
                           onClick={() => {
-                            // In a real app, this would open a file picker
                             const input = document.createElement('input');
                             input.type = 'file';
                             input.accept = 'image/*';
@@ -823,11 +1395,19 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                             };
                             input.click();
                           }}
-                          className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-lg flex items-center justify-center transition-all cursor-pointer"
+                            className="absolute inset-0 bg-black/0 group-hover:bg-black/50 rounded-xl flex items-center justify-center transition-all cursor-pointer"
                         >
-                          <IconPhoto className="w-6 h-6 text-white opacity-0 group-hover:opacity-100" stroke={2} />
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-0.5">
+                              <IconPhoto className="w-4 h-4 text-white" stroke={2} />
+                              <span className="text-[9px] text-white font-medium">Change</span>
+                            </div>
                         </button>
                       </div>
+                      </div>
+
+                      {/* Name and Demographics */}
+                      <div className="flex-1 min-w-0">
+                        {/* Name */}
                       {editingField === "name" ? (
                         <input
                           type="text"
@@ -837,26 +1417,92 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                           onKeyDown={(e) => {
                             if (e.key === "Enter") setEditingField(null);
                           }}
-                          className="mt-2 text-sm font-medium text-[#2b2b40] text-center border-b border-[#0975d7] focus:outline-none bg-transparent w-full"
+                            className="text-xl font-semibold text-[#2b2b40] border-b-2 border-[#0975d7] focus:outline-none bg-transparent w-full max-w-[200px] mb-2"
                           autoFocus
                         />
                       ) : (
-                        <div className="mt-2 flex items-center gap-1 group">
-                          <p className="text-sm font-medium text-[#2b2b40] text-center">{currentPersona.name}</p>
+                          <div className="flex items-center gap-2 group cursor-pointer mb-2" onClick={() => setEditingField("name")}>
+                            <h3 className="text-xl font-semibold text-[#2b2b40]">{currentPersona.name}</h3>
+                            <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/80 rounded">
+                              <IconPencil className="w-3.5 h-3.5 text-[#8d8ba7]" stroke={2} />
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Demographics Pills */}
+                        {editingField === "demographics" ? (
+                          <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#8d8ba7]">Gender:</span>
+                              <input
+                                type="text"
+                                value={currentPersona.gender}
+                                onChange={(e) => updateCurrentPersona({ gender: e.target.value })}
+                                className="text-sm px-2 py-1 border border-[#0975d7] rounded-md focus:outline-none bg-white w-24"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#8d8ba7]">Age:</span>
+                              <input
+                                type="number"
+                                value={currentPersona.age}
+                                onChange={(e) => updateCurrentPersona({ age: parseInt(e.target.value) || 0 })}
+                                className="text-sm px-2 py-1 border border-[#0975d7] rounded-md focus:outline-none bg-white w-16"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#8d8ba7]">Location:</span>
+                              <input
+                                type="text"
+                                value={currentPersona.location}
+                                onChange={(e) => updateCurrentPersona({ location: e.target.value })}
+                                className="text-sm px-2 py-1 border border-[#0975d7] rounded-md focus:outline-none bg-white w-28"
+                              />
+                            </div>
                           <button
-                            onClick={() => setEditingField("name")}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => setEditingField(null)}
+                              className="text-xs text-white bg-[#0975d7] hover:bg-[#0861b8] px-3 py-1 rounded-md transition-colors"
+                            >
+                              Done
+                            </button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="flex flex-wrap items-center gap-2 group cursor-pointer"
+                            onClick={() => setEditingField("demographics")}
                           >
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-[#e5e7eb] rounded-full text-xs text-[#4b5563]">
+                              <svg className="w-3 h-3 text-[#9ca3af]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              {currentPersona.gender}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-[#e5e7eb] rounded-full text-xs text-[#4b5563]">
+                              <svg className="w-3 h-3 text-[#9ca3af]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              {currentPersona.age} years old
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-[#e5e7eb] rounded-full text-xs text-[#4b5563]">
+                              <svg className="w-3 h-3 text-[#9ca3af]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {currentPersona.location}
+                            </span>
+                            <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white rounded">
                             <IconPencil className="w-3 h-3 text-[#8d8ba7]" stroke={2} />
                           </button>
                         </div>
                       )}
+                      </div>
                     </div>
 
-                    {/* Traits */}
-                    <div className="flex-1">
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-[#2b2b40] mb-2">Emotional state:</p>
+                    {/* Traits Section - Full Width */}
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* Emotional States */}
+                      <div>
+                        <p className="text-xs font-medium text-[#6b697b] uppercase tracking-wide mb-2">Emotional state</p>
                         <div className="flex flex-wrap items-center gap-2">
                           {currentPersona.emotionalStates.map((state, index) => {
                             const Icon = getEmotionalIcon(state);
@@ -864,60 +1510,65 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                             return (
                               <span
                                 key={index}
-                                className="px-3 py-1.5 text-sm rounded-full flex items-center gap-1.5 font-medium"
-                                style={{ backgroundColor: colors.bg, color: colors.text }}
+                                className="px-3 py-1.5 text-sm rounded-full flex items-center gap-1.5 font-medium bg-[#f3f4f6] text-[#374151]"
                               >
                                 <Icon className="w-3.5 h-3.5" stroke={2} style={{ color: colors.icon }} />
                                 {state}
                                 <button
                                   onClick={() => setEmotionalStates(currentPersona.emotionalStates.filter((_, i) => i !== index))}
-                                  className="hover:opacity-70 transition-opacity ml-0.5"
-                                  style={{ color: colors.text }}
+                                  className="hover:opacity-70 transition-opacity ml-0.5 text-[#6b7280]"
                                 >
                                   <IconX className="w-3 h-3" stroke={2} />
                                 </button>
                               </span>
                             );
                           })}
-                          {newTagType === "emotional" ? (
-                            <input
-                              type="text"
-                              value={newTag}
-                              onChange={(e) => setNewTag(e.target.value)}
-                              onBlur={() => {
-                                if (newTag.trim()) {
-                                  setEmotionalStates([...currentPersona.emotionalStates, newTag.trim()]);
-                                }
-                                setNewTag("");
-                                setNewTagType(null);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && newTag.trim()) {
-                                  setEmotionalStates([...currentPersona.emotionalStates, newTag.trim()]);
-                                  setNewTag("");
-                                  setNewTagType(null);
-                                } else if (e.key === "Escape") {
-                                  setNewTag("");
-                                  setNewTagType(null);
-                                }
-                              }}
-                              className="px-3 py-1.5 border border-[#0975d7] rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#0975d7] w-28"
-                              placeholder="Add..."
-                              autoFocus
-                            />
-                          ) : (
+                          {/* Dropdown selector for emotional states */}
+                          <div className="relative">
                             <button
-                              onClick={() => setNewTagType("emotional")}
+                              onClick={() => setShowEmotionalDropdown(!showEmotionalDropdown)}
                               className="px-3 py-1.5 border border-dashed border-[#d0d0d0] rounded-full text-sm text-[#8d8ba7] hover:border-[#0975d7] hover:text-[#0975d7] transition-colors flex items-center gap-1.5"
                             >
                               <IconPlus className="w-3.5 h-3.5" stroke={2} />
                               Add
+                              <IconChevronDown className={`w-3 h-3 transition-transform ${showEmotionalDropdown ? 'rotate-180' : ''}`} stroke={2} />
                             </button>
+                            {showEmotionalDropdown && (
+                              <>
+                                <div className="fixed inset-0 z-10" onClick={() => setShowEmotionalDropdown(false)} />
+                                <div className="absolute left-0 top-full mt-1 w-48 bg-white border border-[#ececf3] rounded-lg shadow-lg z-20 max-h-56 overflow-y-auto py-1">
+                                  {emotionalStateOptions
+                                    .filter(option => !currentPersona.emotionalStates.includes(option))
+                                    .map((option) => {
+                                      const Icon = getEmotionalIcon(option);
+                                      const colors = getEmotionalColor(option);
+                                      return (
+                                        <button
+                                          key={option}
+                                          onClick={() => {
+                                            setEmotionalStates([...currentPersona.emotionalStates, option]);
+                                            setShowEmotionalDropdown(false);
+                                          }}
+                                          className="w-full text-left px-3 py-2 text-sm hover:bg-[#f5f7fa] transition-colors flex items-center gap-2"
+                                        >
+                                          <Icon className="w-4 h-4" stroke={2} style={{ color: colors.icon }} />
+                                          <span style={{ color: colors.text }}>{option}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  {emotionalStateOptions.filter(option => !currentPersona.emotionalStates.includes(option)).length === 0 && (
+                                    <p className="px-3 py-2 text-sm text-[#8d8ba7] italic">All options selected</p>
                           )}
                         </div>
+                              </>
+                            )}
                       </div>
+                        </div>
+                      </div>
+
+                      {/* Behavioral Traits */}
                       <div>
-                        <p className="text-sm font-medium text-[#2b2b40] mb-2">Behavioral traits:</p>
+                        <p className="text-xs font-medium text-[#6b697b] uppercase tracking-wide mb-2">Behavioral traits</p>
                         <div className="flex flex-wrap items-center gap-2">
                           {currentPersona.behavioralTraits.map((trait, index) => {
                             const Icon = getBehavioralIcon(trait);
@@ -925,128 +1576,101 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                             return (
                               <span
                                 key={index}
-                                className="px-3 py-1.5 text-sm rounded-full flex items-center gap-1.5 font-medium"
-                                style={{ backgroundColor: colors.bg, color: colors.text }}
+                                className="px-3 py-1.5 text-sm rounded-full flex items-center gap-1.5 font-medium bg-[#f3f4f6] text-[#374151]"
                               >
                                 <Icon className="w-3.5 h-3.5" stroke={2} style={{ color: colors.icon }} />
                                 {trait}
                                 <button
                                   onClick={() => setBehavioralTraits(currentPersona.behavioralTraits.filter((_, i) => i !== index))}
-                                  className="hover:opacity-70 transition-opacity ml-0.5"
-                                  style={{ color: colors.text }}
+                                  className="hover:opacity-70 transition-opacity ml-0.5 text-[#6b7280]"
                                 >
                                   <IconX className="w-3 h-3" stroke={2} />
                                 </button>
                               </span>
                             );
                           })}
-                          {newTagType === "behavioral" ? (
-                            <input
-                              type="text"
-                              value={newTag}
-                              onChange={(e) => setNewTag(e.target.value)}
-                              onBlur={() => {
-                                if (newTag.trim()) {
-                                  setBehavioralTraits([...currentPersona.behavioralTraits, newTag.trim()]);
-                                }
-                                setNewTag("");
-                                setNewTagType(null);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && newTag.trim()) {
-                                  setBehavioralTraits([...currentPersona.behavioralTraits, newTag.trim()]);
-                                  setNewTag("");
-                                  setNewTagType(null);
-                                } else if (e.key === "Escape") {
-                                  setNewTag("");
-                                  setNewTagType(null);
-                                }
-                              }}
-                              className="px-3 py-1.5 border border-[#0975d7] rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#0975d7] w-28"
-                              placeholder="Add..."
-                              autoFocus
-                            />
-                          ) : (
+                          {/* Dropdown selector for behavioral traits */}
+                          <div className="relative">
                             <button
-                              onClick={() => setNewTagType("behavioral")}
+                              onClick={() => setShowBehavioralDropdown(!showBehavioralDropdown)}
                               className="px-3 py-1.5 border border-dashed border-[#d0d0d0] rounded-full text-sm text-[#8d8ba7] hover:border-[#0975d7] hover:text-[#0975d7] transition-colors flex items-center gap-1.5"
                             >
                               <IconPlus className="w-3.5 h-3.5" stroke={2} />
                               Add
+                              <IconChevronDown className={`w-3 h-3 transition-transform ${showBehavioralDropdown ? 'rotate-180' : ''}`} stroke={2} />
                             </button>
-                          )}
+                            {showBehavioralDropdown && (
+                              <>
+                                <div className="fixed inset-0 z-10" onClick={() => setShowBehavioralDropdown(false)} />
+                                <div className="absolute left-0 top-full mt-1 w-48 bg-white border border-[#ececf3] rounded-lg shadow-lg z-20 max-h-56 overflow-y-auto py-1">
+                                  {behavioralTraitOptions
+                                    .filter(option => !currentPersona.behavioralTraits.includes(option))
+                                    .map((option) => {
+                                      const Icon = getBehavioralIcon(option);
+                                      const colors = getBehavioralColor(option);
+                                      return (
+                                        <button
+                                          key={option}
+                                          onClick={() => {
+                                            setBehavioralTraits([...currentPersona.behavioralTraits, option]);
+                                            setShowBehavioralDropdown(false);
+                                          }}
+                                          className="w-full text-left px-3 py-2 text-sm hover:bg-[#f5f7fa] transition-colors flex items-center gap-2"
+                                        >
+                                          <Icon className="w-4 h-4" stroke={2} style={{ color: colors.icon }} />
+                                          <span style={{ color: colors.text }}>{option}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  {behavioralTraitOptions.filter(option => !currentPersona.behavioralTraits.includes(option)).length === 0 && (
+                                    <p className="px-3 py-2 text-sm text-[#8d8ba7] italic">All options selected</p>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  </div>
                 </div>
 
-                {/* Reason for Contact */}
-                <div className="border-b border-[#eee] py-4">
-                  <div className="px-6 grid grid-cols-2 gap-6">
-                  <div>
+                {/* Additional Remarks */}
+                <div className="border-b border-[#eee] py-5">
+                  <div className="px-6">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-[#2b2b40]">Reason for contact</h3>
-                      {editingField !== "reason" && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-[#2b2b40]">Additional remarks</h3>
+                        <p className="text-xs text-[#8d8ba7] mt-0.5">Describe context, behaviour patterns, and other details about this persona</p>
+                      </div>
+                      {editingField !== "remarks" && (
                         <button
-                          onClick={() => setEditingField("reason")}
-                          className="text-[#0975d7] hover:text-[#0861b8]"
+                          onClick={() => setEditingField("remarks")}
+                          className="text-[#0975d7] hover:text-[#0861b8] p-1"
                         >
                           <IconPencil className="w-4 h-4" stroke={2} />
                         </button>
                       )}
                     </div>
-                    {editingField === "reason" ? (
+                    {editingField === "remarks" ? (
                       <textarea
-                        value={currentPersona.reasonForContact}
-                        onChange={(e) => setReasonForContact(e.target.value)}
+                        value={currentPersona.additionalRemarks}
+                        onChange={(e) => setAdditionalRemarks(e.target.value)}
                         onBlur={() => setEditingField(null)}
-                        className="bg-white border border-[#0975d7] rounded-lg p-4 min-h-[138px] w-full text-sm text-[#525066] focus:outline-none focus:ring-2 focus:ring-[#0975d7] resize-none"
+                        className="bg-white border border-[#0975d7] rounded-lg p-4 min-h-[120px] w-full text-sm text-[#525066] focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 resize-none"
+                        placeholder="E.g., Customer is frustrated because their order was delayed for the third time. They have been a loyal customer for 5 years and expect better service..."
                         autoFocus
                       />
                     ) : (
                       <div
-                        onClick={() => setEditingField("reason")}
-                        className="bg-[#f8f8f8] border border-[#e4dddd] rounded-lg p-4 min-h-[138px] cursor-text hover:border-[#0975d7] transition-colors"
+                        onClick={() => setEditingField("remarks")}
+                        className="bg-[#fafafa] border border-[#e8e8e8] rounded-lg p-4 min-h-[120px] cursor-text hover:border-[#0975d7] transition-colors"
                       >
-                        <p className="text-sm text-[#525066] whitespace-pre-wrap">
-                          {currentPersona.reasonForContact || "Click to add reason for contact..."}
+                        <p className="text-sm text-[#525066] whitespace-pre-wrap leading-relaxed">
+                          {currentPersona.additionalRemarks || "Click to add additional context and remarks about this persona..."}
                         </p>
                       </div>
                     )}
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-[#2b2b40]">Likely behaviour</h3>
-                      {editingField !== "behaviour" && (
-                        <button
-                          onClick={() => setEditingField("behaviour")}
-                          className="text-[#0975d7] hover:text-[#0861b8]"
-                        >
-                          <IconPencil className="w-4 h-4" stroke={2} />
-                        </button>
-                      )}
-                    </div>
-                    {editingField === "behaviour" ? (
-                      <textarea
-                        value={currentPersona.likelyBehaviour}
-                        onChange={(e) => setLikelyBehaviour(e.target.value)}
-                        onBlur={() => setEditingField(null)}
-                        className="bg-white border border-[#0975d7] rounded-lg p-4 min-h-[138px] w-full text-sm text-[#525066] focus:outline-none focus:ring-2 focus:ring-[#0975d7] resize-none"
-                        autoFocus
-                      />
-                    ) : (
-                      <div
-                        onClick={() => setEditingField("behaviour")}
-                        className="bg-[#f8f8f8] border border-[#e4dddd] rounded-lg p-4 min-h-[138px] cursor-text hover:border-[#0975d7] transition-colors"
-                      >
-                        <p className="text-sm text-[#525066] whitespace-pre-wrap">
-                          {currentPersona.likelyBehaviour || "Click to add likely behaviour..."}
-                        </p>
-                      </div>
-                    )}
-                  </div>
                   </div>
                 </div>
               </div>
@@ -1057,106 +1681,246 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                 <div className="border-b border-[#eee] py-4 shrink-0">
                   <div className="px-6 flex items-center justify-between">
                     <div>
-                    <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Evaluation</h2>
-                    <p className="text-sm text-[#8d8ba7]">Select competencies to assess</p>
+                      <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Evaluation</h2>
+                      <p className="text-sm text-[#8d8ba7]">Select competencies to assess</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        const newId = String(evaluationParameters.length + 1);
-                        const newParameter: EvaluationParameter = {
-                          id: newId,
-                          title: "New Evaluation Parameter",
-                          criteria: [
-                            "0-2: [Enter description]",
-                            "3-4: [Enter description]",
-                            "5-6: [Enter description]",
-                            "7-8: [Enter description]",
-                            "9-10: [Enter description]",
-                          ],
-                          mappedCompetency: "Empathy",
-                        };
-                        setEvaluationParameters([newParameter, ...evaluationParameters]);
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#0975d7] text-white rounded-lg hover:bg-[#0861b8] transition-colors text-sm font-medium"
-                    >
-                      <IconPlus className="w-4 h-4" stroke={2} />
-                      Add evaluation parameter
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Show either save controls OR normal controls, not both */}
+                      {hasEvaluationChanges ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={discardEvaluationChanges}
+                            className="px-3 py-2 text-sm text-[#6b7280] hover:text-[#374151] hover:bg-[#f3f4f6] rounded-lg transition-colors"
+                          >
+                            Discard
+                          </button>
+                          <button
+                            onClick={saveEvaluationChanges}
+                            disabled={isSavingEvaluation}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#059669] text-white rounded-lg hover:bg-[#047857] transition-colors text-sm font-medium disabled:opacity-70"
+                          >
+                            {isSavingEvaluation ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <IconCheck className="w-4 h-4" stroke={2} />
+                                Save changes
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                      {/* Template Menu - only show when no unsaved changes */}
+                      <div className="relative" data-evaluation-template-menu>
+                        <button
+                          onClick={() => {
+                            setShowEvaluationTemplateMenu(!showEvaluationTemplateMenu);
+                            setEvaluationMenuView("main");
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 border border-[#d7d6d1] text-[#525066] rounded-lg hover:bg-[#f5f5f5] transition-colors text-sm font-medium"
+                        >
+                          <IconDeviceFloppy className="w-4 h-4" stroke={2} />
+                          Templates
+                          <IconChevronDown className={`w-3 h-3 transition-transform ${showEvaluationTemplateMenu ? 'rotate-180' : ''}`} stroke={2} />
+                        </button>
+                        {showEvaluationTemplateMenu && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-40" 
+                              onClick={() => {
+                                setShowEvaluationTemplateMenu(false);
+                                setEvaluationMenuView("main");
+                              }}
+                            />
+                            <div className="absolute right-0 top-[calc(100%+4px)] bg-white rounded-xl shadow-xl border border-[#e4e4e7] w-80 z-50 overflow-hidden">
+                              {evaluationMenuView === "main" && (
+                                <div className="py-2">
+                                  <button
+                                    onClick={() => setEvaluationMenuView("load")}
+                                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f5f7fa] transition-colors"
+                                  >
+                                    <div className="w-8 h-8 rounded-lg bg-[#f0fff4] flex items-center justify-center">
+                                      <IconDownload className="w-4 h-4 text-[#10b981]" stroke={2} />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-[#2b2b40]">Load template</p>
+                                      <p className="text-xs text-[#8d8ba7]">Use a saved template</p>
+                                    </div>
+                                    <IconArrowRight className="w-4 h-4 text-[#8d8ba7]" stroke={2} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEvaluationMenuView("save");
+                                      setNewEvaluationTemplateName("");
+                                      setNewEvaluationTemplateDescription("");
+                                    }}
+                                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[#f5f7fa] transition-colors"
+                                  >
+                                    <div className="w-8 h-8 rounded-lg bg-[#fef3c7] flex items-center justify-center">
+                                      <IconDeviceFloppy className="w-4 h-4 text-[#d97706]" stroke={2} />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-[#2b2b40]">Save as template</p>
+                                      <p className="text-xs text-[#8d8ba7]">Save current parameters</p>
+                                    </div>
+                                    <IconArrowRight className="w-4 h-4 text-[#8d8ba7]" stroke={2} />
+                                  </button>
+                                </div>
+                              )}
+                              {evaluationMenuView === "load" && (
+                                <div>
+                                  <div className="px-4 py-3 border-b border-[#ececf3] flex items-center gap-2">
+                                    <button onClick={() => setEvaluationMenuView("main")} className="p-1 hover:bg-[#f0f0f5] rounded">
+                                      <IconArrowLeft className="w-4 h-4 text-[#6b697b]" stroke={2} />
+                                    </button>
+                                    <span className="text-sm font-medium text-[#2b2b40]">Load template</span>
+                                  </div>
+                                  <div className="max-h-64 overflow-y-auto">
+                                    {evaluationTemplates.length === 0 ? (
+                                      <div className="px-4 py-6 text-center">
+                                        <p className="text-sm text-[#8d8ba7]">No templates saved yet</p>
+                                      </div>
+                                    ) : (
+                                      evaluationTemplates.map((template) => (
+                                        <button
+                                          key={template.id}
+                                          onClick={() => loadEvaluationFromTemplate(template)}
+                                          className="w-full text-left px-4 py-3 hover:bg-[#f5f7fa] transition-colors border-b border-[#f5f5f5] last:border-b-0"
+                                        >
+                                          <p className="text-sm font-medium text-[#2b2b40]">{template.name}</p>
+                                          <p className="text-xs text-[#8d8ba7] mt-0.5">{template.description}</p>
+                                          <div className="flex flex-wrap gap-1 mt-2">
+                                            {template.parameters.slice(0, 2).map((param, idx) => (
+                                              <span key={idx} className="text-[10px] px-2 py-0.5 rounded-full bg-[#e0f2fe] text-[#0369a1]">
+                                                {param.title.length > 25 ? param.title.substring(0, 25) + '...' : param.title}
+                                              </span>
+                                            ))}
+                                            {template.parameters.length > 2 && (
+                                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f0f0f5] text-[#6b697b]">
+                                                +{template.parameters.length - 2} more
+                                              </span>
+                                            )}
+                                          </div>
+                                        </button>
+                                      ))
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              {evaluationMenuView === "save" && (
+                                <div>
+                                  <div className="px-4 py-3 border-b border-[#ececf3] flex items-center gap-2">
+                                    <button onClick={() => setEvaluationMenuView("main")} className="p-1 hover:bg-[#f0f0f5] rounded">
+                                      <IconArrowLeft className="w-4 h-4 text-[#6b697b]" stroke={2} />
+                                    </button>
+                                    <span className="text-sm font-medium text-[#2b2b40]">Save as template</span>
+                                  </div>
+                                  <div className="p-4 space-y-3">
+                                    <div>
+                                      <label className="block text-xs font-medium text-[#6b697b] mb-1">Template name</label>
+                                      <input
+                                        type="text"
+                                        value={newEvaluationTemplateName}
+                                        onChange={(e) => setNewEvaluationTemplateName(e.target.value)}
+                                        placeholder="E.g., Customer support basics"
+                                        className="w-full px-3 py-2 text-sm border border-[#d7d6d1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 focus:border-[#0975d7]"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-medium text-[#6b697b] mb-1">Description</label>
+                                      <input
+                                        type="text"
+                                        value={newEvaluationTemplateDescription}
+                                        onChange={(e) => setNewEvaluationTemplateDescription(e.target.value)}
+                                        placeholder="Brief description..."
+                                        className="w-full px-3 py-2 text-sm border border-[#d7d6d1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 focus:border-[#0975d7]"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-[#8d8ba7] bg-[#f5f7fa] rounded-lg px-3 py-2">
+                                      <IconClipboardCheck className="w-4 h-4" stroke={2} />
+                                      <span>{evaluationParameters.length} parameter{evaluationParameters.length !== 1 ? 's' : ''} will be saved</span>
+                                    </div>
+                                    <button
+                                      onClick={saveEvaluationAsTemplate}
+                                      disabled={!newEvaluationTemplateName.trim() || evaluationParameters.length === 0}
+                                      className="w-full py-2 text-sm font-medium text-white bg-[#0975d7] rounded-lg hover:bg-[#0861b8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      Save template
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                        </>
+                      )}
+
+                      {/* Add button */}
+                      <button
+                        onClick={() => {
+                          const newId = String(evaluationParameters.length + 1);
+                          const newParameter: EvaluationParameter = {
+                            id: newId,
+                            title: "New evaluation parameter",
+                            criteria: [
+                              "0-2: [Enter description]",
+                              "3-4: [Enter description]",
+                              "5-6: [Enter description]",
+                              "7-8: [Enter description]",
+                              "9-10: [Enter description]",
+                            ],
+                            mappedCompetency: "Empathy",
+                          };
+                          setEvaluationParameters([newParameter, ...evaluationParameters]);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#0975d7] text-white rounded-lg hover:bg-[#0861b8] transition-colors text-sm font-medium"
+                      >
+                        <IconPlus className="w-4 h-4" stroke={2} />
+                        Add evaluation parameter
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Competencies */}
+                {/* Evaluation Parameters */}
                 <div className="flex-1 overflow-y-auto">
-                  {evaluationParameters.map((parameter) => (
-                    <div key={parameter.id} className="bg-[#f8f8f8] border-b border-[#e4dddd] py-4">
-                      <div className="px-6">
-                        <div className="flex items-center justify-between mb-4">
-                          {editingEvaluation?.type === "title" && editingEvaluation.parameterId === parameter.id ? (
-                            <input
-                              type="text"
-                              value={editingValue}
-                              onChange={(e) => setEditingValue(e.target.value)}
-                              onBlur={() => {
-                                if (editingValue.trim()) {
-                                  setEvaluationParameters(
-                                    evaluationParameters.map((p) =>
-                                      p.id === parameter.id ? { ...p, title: editingValue.trim() } : p
-                                    )
-                                  );
-                                }
-                                setEditingEvaluation(null);
-                                setEditingValue("");
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && editingValue.trim()) {
-                                  setEvaluationParameters(
-                                    evaluationParameters.map((p) =>
-                                      p.id === parameter.id ? { ...p, title: editingValue.trim() } : p
-                                    )
-                                  );
-                                  setEditingEvaluation(null);
-                                  setEditingValue("");
-                                } else if (e.key === "Escape") {
-                                  setEditingEvaluation(null);
-                                  setEditingValue("");
-                                }
-                              }}
-                              className="text-base font-semibold text-[#2b2b40] border-b border-[#0975d7] focus:outline-none bg-transparent flex-1"
-                              autoFocus
-                            />
-                          ) : (
-                            <div className="flex items-center gap-2 group">
-                              <h3 className="text-base font-semibold text-[#2b2b40]">
-                                {parameter.title}
-                              </h3>
-                              <button
-                                onClick={() => {
-                                  setEditingEvaluation({ type: "title", parameterId: parameter.id });
-                                  setEditingValue(parameter.title);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <IconPencil className="w-3.5 h-3.5 text-[#8d8ba7]" stroke={2.5} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <ul className="space-y-2 text-sm text-[#525066] mb-4">
-                          {parameter.criteria.map((criterion, index) => (
-                            <li key={index} className="flex items-start gap-2 group">
-                              {editingEvaluation?.type === "criteria" &&
-                              editingEvaluation.parameterId === parameter.id &&
-                              editingEvaluation.criteriaIndex === index ? (
-                                <textarea
+                  {evaluationParameters.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="w-12 h-12 rounded-xl bg-[#f3f4f6] flex items-center justify-center mb-3">
+                        <IconClipboardCheck className="w-6 h-6 text-[#9ca3af]" stroke={1.5} />
+                      </div>
+                      <h3 className="text-sm font-medium text-[#374151] mb-1">No evaluation parameters</h3>
+                      <p className="text-xs text-[#9ca3af] max-w-xs">Add parameters to define assessment criteria</p>
+                    </div>
+                  ) : (
+                    evaluationParameters.map((parameter) => {
+                      const scoreRanges = ["0-2", "3-4", "5-6", "7-8", "9-10"];
+                      
+                      return (
+                        <div 
+                          key={parameter.id} 
+                          className="border-b border-[#e5e7eb]"
+                        >
+                          {/* Header Row */}
+                          <div className="px-6 py-4 flex items-center gap-4">
+                            {/* Title */}
+                            <div className="flex-1 min-w-0">
+                              {editingEvaluation?.type === "title" && editingEvaluation.parameterId === parameter.id ? (
+                                <input
+                                  type="text"
                                   value={editingValue}
                                   onChange={(e) => setEditingValue(e.target.value)}
                                   onBlur={() => {
                                     if (editingValue.trim()) {
-                                      const newCriteria = [...parameter.criteria];
-                                      newCriteria[index] = editingValue.trim();
                                       setEvaluationParameters(
                                         evaluationParameters.map((p) =>
-                                          p.id === parameter.id ? { ...p, criteria: newCriteria } : p
+                                          p.id === parameter.id ? { ...p, title: editingValue.trim() } : p
                                         )
                                       );
                                     }
@@ -1164,13 +1928,10 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                                     setEditingValue("");
                                   }}
                                   onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey && editingValue.trim()) {
-                                      e.preventDefault();
-                                      const newCriteria = [...parameter.criteria];
-                                      newCriteria[index] = editingValue.trim();
+                                    if (e.key === "Enter" && editingValue.trim()) {
                                       setEvaluationParameters(
                                         evaluationParameters.map((p) =>
-                                          p.id === parameter.id ? { ...p, criteria: newCriteria } : p
+                                          p.id === parameter.id ? { ...p, title: editingValue.trim() } : p
                                         )
                                       );
                                       setEditingEvaluation(null);
@@ -1180,77 +1941,172 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
                                       setEditingValue("");
                                     }
                                   }}
-                                  className="flex-1 text-sm text-[#525066] border-b border-[#0975d7] focus:outline-none bg-transparent resize-none"
+                                  className="w-full text-sm font-medium text-[#1f2937] border-b border-[#0975d7] focus:outline-none bg-transparent"
                                   autoFocus
-                                  rows={2}
                                 />
                               ) : (
-                                <>
-                                  <span>•</span>
-                                  <span className="flex-1">{criterion}</span>
+                                <div className="flex items-center gap-2 group/title">
+                                  <span className="text-sm font-medium text-[#1f2937]">
+                                    {parameter.title}
+                                  </span>
                                   <button
                                     onClick={() => {
-                                      setEditingEvaluation({
-                                        type: "criteria",
-                                        parameterId: parameter.id,
-                                        criteriaIndex: index,
-                                      });
-                                      setEditingValue(criterion);
+                                      setEditingEvaluation({ type: "title", parameterId: parameter.id });
+                                      setEditingValue(parameter.title);
                                     }}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                                    className="opacity-0 group-hover/title:opacity-100 p-0.5 rounded hover:bg-[#f0f0f0] transition-all"
                                   >
-                                    <IconPencil className="w-3 h-3 text-[#8d8ba7]" stroke={2.5} />
+                                    <IconPencil className="w-3 h-3 text-[#9ca3af]" stroke={2} />
                                   </button>
-                                </>
+                                </div>
                               )}
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="flex items-center gap-3 relative">
-                          <span className="text-sm text-[#8d8ba7]">Mapped competency</span>
-                          <div className="relative" data-competency-dropdown>
+                            </div>
+                            
+                            {/* Competency */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-sm text-[#9ca3af]">Mapped competency</span>
+                              <div className="relative" data-competency-dropdown>
+                                <button
+                                  onClick={() => {
+                                    setOpenCompetencyDropdown(
+                                      openCompetencyDropdown === parameter.id ? null : parameter.id
+                                    );
+                                  }}
+                                  className="flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-md border border-dashed border-[#d1d5db] hover:border-[#059669] hover:bg-[#ecfdf5] transition-colors"
+                                >
+                                  <span className="text-[#059669] font-medium">{parameter.mappedCompetency}</span>
+                                  <IconChevronDown className={`w-3 h-3 text-[#059669] transition-transform ${openCompetencyDropdown === parameter.id ? 'rotate-180' : ''}`} stroke={2} />
+                                </button>
+                                {openCompetencyDropdown === parameter.id && (
+                                  <div className="absolute right-0 top-[calc(100%+8px)] bg-white rounded-lg shadow-lg border border-[#e5e7eb] py-1 min-w-[180px] z-50 max-h-[280px] overflow-y-auto">
+                                    {availableCompetencies.map((competency) => (
+                                      <button
+                                        key={competency}
+                                        onClick={() => {
+                                          setEvaluationParameters(
+                                            evaluationParameters.map((p) =>
+                                              p.id === parameter.id
+                                                ? { ...p, mappedCompetency: competency }
+                                                : p
+                                            )
+                                          );
+                                          setOpenCompetencyDropdown(null);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 text-sm hover:bg-[#f5f5f5] transition-colors ${
+                                          parameter.mappedCompetency === competency
+                                            ? 'bg-[#ecfdf5] text-[#059669] font-medium'
+                                            : 'text-[#374151]'
+                                        }`}
+                                      >
+                                        {competency}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Delete */}
                             <button
                               onClick={() => {
-                                setOpenCompetencyDropdown(
-                                  openCompetencyDropdown === parameter.id ? null : parameter.id
+                                setEvaluationParameters(
+                                  evaluationParameters.filter((p) => p.id !== parameter.id)
                                 );
                               }}
-                              className="flex items-center gap-2 px-3 py-1 bg-[#d4e6dd] text-[#0f5323] text-sm rounded hover:bg-[#c4d6cd] transition-colors"
+                              className="p-1.5 rounded hover:bg-[#fef2f2] transition-colors group/del shrink-0"
+                              title="Delete parameter"
                             >
-                              <span>{parameter.mappedCompetency}</span>
-                              <IconChevronDown className={`w-3 h-3 transition-transform ${openCompetencyDropdown === parameter.id ? 'rotate-180' : ''}`} stroke={2} />
+                              <IconTrash className="w-4 h-4 text-[#d1d5db] group-hover/del:text-[#ef4444]" stroke={1.5} />
                             </button>
-                            {openCompetencyDropdown === parameter.id && (
-                              <div className="absolute left-0 top-[calc(100%+4px)] bg-white rounded-lg shadow-lg border border-[#e4dddd] py-2 min-w-[200px] max-w-[300px] z-50 max-h-[300px] overflow-y-auto">
-                                {availableCompetencies.map((competency) => (
-                                  <button
-                                    key={competency}
-                                    onClick={() => {
-                                  setEvaluationParameters(
-                                    evaluationParameters.map((p) =>
-                                      p.id === parameter.id
-                                            ? { ...p, mappedCompetency: competency }
-                                        : p
-                                    )
-                                  );
-                                      setOpenCompetencyDropdown(null);
-                                    }}
-                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-[#f5f5f5] transition-colors ${
-                                      parameter.mappedCompetency === competency
-                                        ? 'bg-[#d4e6dd] text-[#0f5323] font-medium'
-                                        : 'text-[#3d3c52]'
-                                    }`}
-                                  >
-                                    {competency}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
                           </div>
+                          
+                          {/* Criteria List */}
+                          <div className="px-6 pb-5 pt-1">
+                            <div className="space-y-0">
+                                {parameter.criteria.map((criterion, index) => {
+                                  const scoreMatch = criterion.match(/^(\d+-\d+):\s*(.*)$/);
+                                  const scoreRange = scoreMatch ? scoreMatch[1] : scoreRanges[index] || "";
+                                  const description = scoreMatch ? scoreMatch[2] : criterion;
+                                  const isEditing = editingEvaluation?.type === "criteria" &&
+                                    editingEvaluation.parameterId === parameter.id &&
+                                    editingEvaluation.criteriaIndex === index;
+                                  
+                                  return (
+                                    <div 
+                                      key={index} 
+                                      className={`flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-md group/row transition-all ${
+                                        isEditing 
+                                          ? 'bg-[#f0f7ff]' 
+                                          : 'hover:bg-[#f9fafb] cursor-pointer'
+                                      }`}
+                                      onClick={() => {
+                                        if (!isEditing) {
+                                          setEditingEvaluation({
+                                            type: "criteria",
+                                            parameterId: parameter.id,
+                                            criteriaIndex: index,
+                                          });
+                                          setEditingValue(description);
+                                        }
+                                      }}
+                                    >
+                                      <span className="text-xs font-medium text-[#6b7280] bg-[#f3f4f6] px-2 py-0.5 rounded w-12 text-center shrink-0 mt-0.5">
+                                        {scoreRange}
+                                      </span>
+                                      {isEditing ? (
+                                        <textarea
+                                          value={editingValue}
+                                          onChange={(e) => setEditingValue(e.target.value)}
+                                          onBlur={() => {
+                                            if (editingValue.trim()) {
+                                              const newCriteria = [...parameter.criteria];
+                                              newCriteria[index] = `${scoreRange}: ${editingValue.trim()}`;
+                                              setEvaluationParameters(
+                                                evaluationParameters.map((p) =>
+                                                  p.id === parameter.id ? { ...p, criteria: newCriteria } : p
+                                                )
+                                              );
+                                            }
+                                            setEditingEvaluation(null);
+                                            setEditingValue("");
+                                          }}
+                                          onKeyDown={(e) => {
+                                            if (e.key === "Enter" && !e.shiftKey && editingValue.trim()) {
+                                              e.preventDefault();
+                                              const newCriteria = [...parameter.criteria];
+                                              newCriteria[index] = `${scoreRange}: ${editingValue.trim()}`;
+                                              setEvaluationParameters(
+                                                evaluationParameters.map((p) =>
+                                                  p.id === parameter.id ? { ...p, criteria: newCriteria } : p
+                                              )
+                                              );
+                                              setEditingEvaluation(null);
+                                              setEditingValue("");
+                                            } else if (e.key === "Escape") {
+                                              setEditingEvaluation(null);
+                                              setEditingValue("");
+                                            }
+                                          }}
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="flex-1 text-sm text-[#374151] bg-white rounded-md px-3 py-2 border border-[#0975d7] focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 resize-none"
+                                          autoFocus
+                                          rows={2}
+                                        />
+                                      ) : (
+                                        <div className="flex-1 flex items-start gap-2 group/text">
+                                          <p className="flex-1 text-sm text-[#4b5563] leading-relaxed">{description}</p>
+                                          <IconPencil className="w-3.5 h-3.5 text-[#d1d5db] opacity-0 group-hover/row:opacity-100 transition-opacity shrink-0 mt-0.5" stroke={2} />
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}
@@ -1582,6 +2438,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow }: ScenarioDetai
           </div>
         </div>
       )}
+
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import React from "react";
 import svgPaths from "./svg-9nz3qat7vm";
 import clsx from "clsx";
 import imgImage7 from "@/assets/9fd108fffcc9a09175ecdd31b797649bb5abc594.png";
@@ -979,7 +980,7 @@ function Frame13() {
   return (
     <div className="content-stretch flex gap-[4px] items-center relative shrink-0">
       <p className="font-['Noto_Sans:Regular',sans-serif] font-normal leading-[1.4] relative shrink-0 text-[#2b2b40] text-[14px] text-nowrap" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>
-        Mapped competency
+        competency
       </p>
       <Text1 text="Empathy" />
     </div>
@@ -1017,7 +1018,7 @@ function Frame20() {
   return (
     <div className="content-stretch flex gap-[4px] items-center relative shrink-0">
       <p className="font-['Noto_Sans:Regular',sans-serif] font-normal leading-[1.4] relative shrink-0 text-[#2b2b40] text-[14px] text-nowrap" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>
-        Mapped competency
+        competency
       </p>
       <Text1 text="Resolution" />
     </div>
@@ -1071,7 +1072,7 @@ function Frame23() {
   return (
     <div className="content-stretch flex gap-[4px] items-center relative shrink-0">
       <p className="font-['Noto_Sans:Regular',sans-serif] font-normal leading-[1.4] relative shrink-0 text-[#2b2b40] text-[14px] text-nowrap" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>
-        Mapped competency
+        competency
       </p>
       <Text1 text="Knowledge" />
     </div>
