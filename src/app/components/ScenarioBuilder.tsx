@@ -1003,18 +1003,18 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
   }) => (
     <button
       onClick={onClick}
-      className={`inline-block px-[4px] py-[2px] mx-[2px] transition-all cursor-pointer ${
+      className={`inline-block px-[6px] py-[2px] mx-[2px] rounded-[4px] transition-all cursor-pointer ${
         isActive
-          ? "bg-[#fef08a] border-b-2 border-[#eab308]"
+          ? "bg-[#dbeafe] ring-2 ring-[#0975d7] ring-offset-1"
           : value
-            ? "bg-[#fef9c3] border-b-2 border-dashed border-[#ca8a04] hover:bg-[#fef08a]"
-            : "bg-[#fef3c7] border-b-2 border-dashed border-[#d97706]"
+            ? "bg-[#eff6ff] hover:bg-[#dbeafe] border-b border-dashed border-[#0975d7]"
+            : "bg-[#f3f4f6] border-b border-dashed border-[#9ca3af] hover:bg-[#e5e7eb]"
       }`}
     >
-      <span className={`font-['Georgia',serif] text-[20px] ${
-        value ? "text-[#713f12]" : "text-[#92400e] italic"
+      <span className={`font-['Inter:Medium',sans-serif] font-medium text-[15px] ${
+        isActive ? "text-[#0975d7]" : value ? "text-[#0975d7]" : "text-[#6b697b] italic"
       }`}>
-        {value || "________"}
+        {value || "select..."}
       </span>
     </button>
   );
@@ -1247,47 +1247,56 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             {displayMode === "interview" && (
               <motion.div 
                 className="flex flex-col w-full mt-[24px]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
               >
-                {/* Progress bar */}
-                <div className="flex items-center gap-[12px] mb-[40px]">
-                  <div className="flex-1 h-[4px] bg-[#e5e7eb] rounded-full overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-[#0975d7] rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${((interviewStep + 1) / interviewSteps.length) * 100}%` }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </div>
-                  <span className="font-['Inter:Medium',sans-serif] font-medium text-[13px] text-[#6b7280]">
-                    {interviewStep + 1} of {interviewSteps.length}
-                  </span>
+                {/* Step indicators */}
+                <div className="flex items-center gap-[8px] mb-[32px]">
+                  {interviewSteps.map((step, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setInterviewStep(idx)}
+                      className={`flex items-center gap-[6px] px-[10px] py-[6px] rounded-[6px] transition-all ${
+                        idx === interviewStep
+                          ? "bg-[#0975d7] text-white"
+                          : idx < interviewStep
+                            ? "bg-[#dcfce7] text-[#166534]"
+                            : "bg-[#f3f4f6] text-[#6b697b] hover:bg-[#e5e7eb]"
+                      }`}
+                    >
+                      <span className="font-['Inter:Medium',sans-serif] font-medium text-[12px]">
+                        {idx + 1}
+                      </span>
+                    </button>
+                  ))}
                 </div>
 
                 {/* Current Question */}
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={interviewStep}
-                    initial={{ opacity: 0, x: 20 }}
+                    initial={{ opacity: 0, x: 12 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex flex-col gap-[16px]"
+                    exit={{ opacity: 0, x: -12 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex flex-col"
                   >
-                    <h2 className="font-['Inter:SemiBold',sans-serif] font-semibold text-[28px] text-[#1f2937] leading-[36px]">
+                    <p className="font-['Inter:Regular',sans-serif] text-[13px] text-[#6b697b] mb-[6px]">
+                      Step {interviewStep + 1} of {interviewSteps.length}
+                    </p>
+                    <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[20px] text-[#3d3c52] leading-[28px]">
                       {interviewSteps[interviewStep].question}
                     </h2>
-                    <p className="font-['Inter:Regular',sans-serif] text-[15px] text-[#6b7280] leading-[24px]">
+                    <p className="font-['Inter:Regular',sans-serif] text-[14px] text-[#6b697b] leading-[22px] mt-[8px]">
                       {interviewSteps[interviewStep].hint}
                     </p>
 
-                    {/* Options Grid */}
-                    <div className="grid grid-cols-2 gap-[12px] mt-[24px]">
+                    {/* Options */}
+                    <div className="flex flex-wrap gap-[8px] mt-[20px]">
                       {interviewSteps[interviewStep].field === "criteria" ? (
                         dropdownOptions.criteria.filter(opt => opt !== "Add custom...").map((option) => (
-                          <motion.button
+                          <button
                             key={option}
                             onClick={() => {
                               if (!evaluationCriteria.includes(option)) {
@@ -1300,20 +1309,16 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                                 }
                               }
                             }}
-                            className={`p-[16px] rounded-[12px] border-2 transition-all text-left ${
+                            className={`px-[14px] py-[10px] rounded-[8px] border transition-all ${
                               evaluationCriteria.includes(option)
-                                ? "border-[#0975d7] bg-[#eff6ff]"
-                                : "border-[#e5e7eb] bg-white hover:border-[#9ca3af]"
+                                ? "border-[#0975d7] bg-[#eff6ff] text-[#0975d7]"
+                                : "border-[#d7d6d1] bg-white text-[#3d3c52] hover:border-[#9ca3af] hover:bg-[#f9fafb]"
                             }`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
                           >
-                            <span className={`font-['Inter:Medium',sans-serif] font-medium text-[15px] ${
-                              evaluationCriteria.includes(option) ? "text-[#0975d7]" : "text-[#374151]"
-                            }`}>
+                            <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">
                               {option}
                             </span>
-                          </motion.button>
+                          </button>
                         ))
                       ) : (
                         (dropdownOptions[interviewSteps[interviewStep].field as keyof typeof dropdownOptions] as string[] || [])
@@ -1321,34 +1326,30 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                           .map((option: string) => {
                             const isSelected = values[interviewSteps[interviewStep].field as keyof typeof values] === option;
                             return (
-                              <motion.button
+                              <button
                                 key={option}
                                 onClick={() => handleSelect(interviewSteps[interviewStep].field, option)}
-                                className={`p-[16px] rounded-[12px] border-2 transition-all text-left ${
+                                className={`px-[14px] py-[10px] rounded-[8px] border transition-all ${
                                   isSelected
-                                    ? "border-[#0975d7] bg-[#eff6ff]"
-                                    : "border-[#e5e7eb] bg-white hover:border-[#9ca3af]"
+                                    ? "border-[#0975d7] bg-[#eff6ff] text-[#0975d7]"
+                                    : "border-[#d7d6d1] bg-white text-[#3d3c52] hover:border-[#9ca3af] hover:bg-[#f9fafb]"
                                 }`}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
                               >
-                                <span className={`font-['Inter:Medium',sans-serif] font-medium text-[15px] ${
-                                  isSelected ? "text-[#0975d7]" : "text-[#374151]"
-                                }`}>
+                                <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">
                                   {option}
                                 </span>
-                              </motion.button>
+                              </button>
                             );
                           })
                       )}
                     </div>
 
                     {/* Selected criteria display (for criteria step) */}
-                    {interviewSteps[interviewStep].field === "criteria" && (
-                      <div className="mt-[16px] flex flex-wrap gap-[8px]">
-                        <span className="font-['Inter:Regular',sans-serif] text-[13px] text-[#6b7280]">Selected:</span>
+                    {interviewSteps[interviewStep].field === "criteria" && evaluationCriteria.length > 0 && (
+                      <div className="mt-[16px] flex flex-wrap items-center gap-[8px] pt-[12px] border-t border-[#ececf3]">
+                        <span className="font-['Inter:Regular',sans-serif] text-[12px] text-[#6b697b]">Selected:</span>
                         {evaluationCriteria.map((c) => (
-                          <span key={c} className="px-[10px] py-[4px] bg-[#0975d7] text-white rounded-full text-[13px] font-['Inter:Medium',sans-serif] font-medium">
+                          <span key={c} className="px-[10px] py-[4px] bg-[#0975d7] text-white rounded-full text-[12px] font-['Inter:Medium',sans-serif] font-medium">
                             {c}
                           </span>
                         ))}
@@ -1358,27 +1359,27 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                 </AnimatePresence>
 
                 {/* Navigation */}
-                <div className="flex justify-between items-center mt-[48px]">
+                <div className="flex justify-between items-center mt-[32px] pt-[20px] border-t border-[#ececf3]">
                   <button
                     onClick={() => setInterviewStep(Math.max(0, interviewStep - 1))}
                     disabled={interviewStep === 0}
-                    className="flex items-center gap-[8px] px-[16px] py-[10px] text-[#6b7280] hover:text-[#374151] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-[6px] px-[12px] py-[8px] text-[#6b697b] hover:text-[#3d3c52] hover:bg-[#f5f5f5] rounded-[6px] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   >
-                    <IconArrowLeft className="size-[18px]" stroke={2} />
-                    <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Back</span>
+                    <IconArrowLeft className="size-[16px]" stroke={2} />
+                    <span className="font-['Inter:Medium',sans-serif] font-medium text-[13px]">Back</span>
                   </button>
 
                   {interviewStep < interviewSteps.length - 1 ? (
                     <button
                       onClick={() => setInterviewStep(interviewStep + 1)}
-                      className="flex items-center gap-[8px] px-[20px] py-[10px] bg-[#0975d7] text-white rounded-[8px] hover:bg-[#0861b8] transition-colors"
+                      className="flex items-center gap-[6px] px-[16px] py-[8px] bg-[#3d3c52] text-white rounded-[6px] hover:bg-[#2d2c42] transition-colors"
                     >
-                      <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Continue</span>
-                      <IconArrowRight className="size-[18px]" stroke={2} />
+                      <span className="font-['Inter:Medium',sans-serif] font-medium text-[13px]">Continue</span>
+                      <IconArrowRight className="size-[16px]" stroke={2} />
                     </button>
                   ) : (
                     <button
-                      className="flex items-center gap-[8px] px-[20px] py-[10px] bg-[#c74900] text-white rounded-[8px] hover:bg-[#b04200] transition-colors disabled:opacity-70"
+                      className="flex items-center gap-[6px] px-[16px] py-[8px] bg-[#c74900] text-white rounded-[6px] hover:bg-[#b04200] transition-colors disabled:opacity-70"
                       onClick={() => {
                         setIsGenerating(true);
                         onGenerateScenario({
@@ -1392,13 +1393,13 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                     >
                       {isGenerating ? (
                         <>
-                          <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Generating...</span>
-                          <IconLoader2 className="size-[18px] animate-spin" stroke={2} />
+                          <span className="font-['Inter:Medium',sans-serif] font-medium text-[13px]">Generating...</span>
+                          <IconLoader2 className="size-[16px] animate-spin" stroke={2} />
                         </>
                       ) : (
                         <>
-                          <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Generate Scenario</span>
-                          <IconArrowRight className="size-[18px]" stroke={2} />
+                          <span className="font-['Inter:Medium',sans-serif] font-medium text-[13px]">Generate scenario</span>
+                          <IconArrowRight className="size-[16px]" stroke={2} />
                         </>
                       )}
                     </button>
@@ -1411,20 +1412,21 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             {displayMode === "story" && (
               <motion.div 
                 className="flex flex-col w-full mt-[24px]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
               >
                 {/* Story narrative with fillable slots */}
-                <div className="bg-[#fefce8] border border-[#fef08a] rounded-[16px] p-[32px] relative">
-                  <div className="absolute top-[16px] right-[16px] px-[8px] py-[4px] bg-[#fef9c3] rounded-[6px]">
-                    <span className="font-['Inter:Medium',sans-serif] font-medium text-[11px] text-[#a16207] uppercase tracking-wide">
-                      Fill in the blanks
+                <div className="bg-white border border-[#ececf3] rounded-[8px] p-[24px]">
+                  <div className="flex items-center gap-[8px] mb-[20px] pb-[12px] border-b border-[#ececf3]">
+                    <IconFileText className="size-[16px] text-[#6b697b]" stroke={1.5} />
+                    <span className="font-['Inter:Medium',sans-serif] font-medium text-[13px] text-[#6b697b]">
+                      Click on the highlighted text to edit
                     </span>
                   </div>
 
-                  <p className="font-['Georgia',serif] text-[20px] leading-[36px] text-[#44403c]">
-                    <span>You are training </span>
+                  <p className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">
+                    <span>I want to train </span>
                     <StorySlot 
                       field="trainee" 
                       value={values.trainee}
@@ -1455,35 +1457,35 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                     <span>.</span>
                   </p>
 
-                  <p className="font-['Georgia',serif] text-[20px] leading-[36px] text-[#44403c] mt-[24px]">
-                    <span>The goal is to </span>
+                  <p className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563] mt-[16px]">
+                    <span>The learner should </span>
                     <StorySlot 
                       field="objective" 
                       value={values.objective}
                       isActive={activeStorySlot === "objective"}
                       onClick={() => setActiveStorySlot(activeStorySlot === "objective" ? null : "objective")}
                     />
-                    <span>. Success will be measured by </span>
-                    <span className="font-semibold text-[#166534]">{evaluationCriteria.join(", ")}</span>
+                    <span>. Evaluate on </span>
+                    <span className="font-['Inter:Medium',sans-serif] font-medium text-[#0975d7]">{evaluationCriteria.join(", ")}</span>
                     <span>.</span>
                   </p>
 
-                  <p className="font-['Georgia',serif] text-[20px] leading-[36px] text-[#44403c] mt-[24px]">
-                    <span>This will be a </span>
+                  <p className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563] mt-[16px]">
+                    <span>The modality is </span>
                     <StorySlot 
                       field="modality" 
                       value={values.modality}
                       isActive={activeStorySlot === "modality"}
                       onClick={() => setActiveStorySlot(activeStorySlot === "modality" ? null : "modality")}
                     />
-                    <span> conversation with </span>
+                    <span> and the difficulty level should be </span>
                     <StorySlot 
                       field="difficulty" 
                       value={values.difficulty}
                       isActive={activeStorySlot === "difficulty"}
                       onClick={() => setActiveStorySlot(activeStorySlot === "difficulty" ? null : "difficulty")}
                     />
-                    <span> difficulty.</span>
+                    <span>.</span>
                   </p>
                 </div>
 
@@ -1491,15 +1493,16 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                 <AnimatePresence>
                   {activeStorySlot && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="mt-[24px] p-[20px] bg-white border border-[#e5e7eb] rounded-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.15 }}
+                      className="mt-[12px] p-[16px] bg-white border border-[#ececf3] rounded-[8px] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
                     >
-                      <p className="font-['Inter:Medium',sans-serif] font-medium text-[13px] text-[#6b7280] mb-[12px]">
-                        Select an option:
+                      <p className="font-['Inter:Medium',sans-serif] font-medium text-[12px] text-[#6b697b] mb-[10px]">
+                        Choose an option:
                       </p>
-                      <div className="flex flex-wrap gap-[8px]">
+                      <div className="flex flex-wrap gap-[6px]">
                         {(dropdownOptions[activeStorySlot as keyof typeof dropdownOptions] as string[] || [])
                           .filter((opt: string) => opt !== "Add custom..." && !opt.startsWith("template:"))
                           .map((option: string) => (
@@ -1509,13 +1512,13 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                                 handleSelect(activeStorySlot, option);
                                 setActiveStorySlot(null);
                               }}
-                              className={`px-[14px] py-[8px] rounded-[8px] border transition-all ${
+                              className={`px-[12px] py-[6px] rounded-[6px] border transition-all ${
                                 values[activeStorySlot as keyof typeof values] === option
                                   ? "border-[#0975d7] bg-[#eff6ff] text-[#0975d7]"
-                                  : "border-[#e5e7eb] bg-[#f9fafb] text-[#374151] hover:border-[#9ca3af]"
+                                  : "border-[#d7d6d1] bg-white text-[#3d3c52] hover:border-[#9ca3af] hover:bg-[#f9fafb]"
                               }`}
                             >
-                              <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">
+                              <span className="font-['Inter:Medium',sans-serif] font-medium text-[13px]">
                                 {option}
                               </span>
                             </button>
@@ -1527,7 +1530,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
 
                 {/* Generate Button */}
                 <button
-                  className="bg-[#c74900] flex gap-[8px] items-center justify-center px-[20px] py-[12px] rounded-[8px] hover:bg-[#b04200] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-[32px] w-fit"
+                  className="bg-[#c74900] flex gap-[8px] items-center justify-center px-[20px] py-[10px] rounded-[6px] hover:bg-[#b04200] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-[24px] w-fit"
                   onClick={() => {
                     setIsGenerating(true);
                     onGenerateScenario({
