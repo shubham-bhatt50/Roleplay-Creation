@@ -1,7 +1,63 @@
-import { IconArrowRight, IconLoader2, IconFileText, IconArrowLeft, IconMoodAngry, IconMoodSad, IconMoodNeutral, IconHeadphones, IconMessageCircle } from "@tabler/icons-react";
-import { useState, useEffect, useRef } from "react";
+import { IconArrowRight, IconLoader2, IconFileText, IconArrowLeft, IconMoodAngry, IconMoodSad, IconMoodNeutral, IconHeadphones, IconMessageCircle, IconTemplate, IconPlus } from "@tabler/icons-react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import imgAlexJonathan from "@/assets/Alex.png";
+
+// Template definitions for persona
+const personaTemplates = [
+  {
+    id: "angry-refund",
+    name: "Angry refund seeker",
+    customerName: "Alex",
+    emotion: "Frustrated",
+    scenario: "they want a full refund for a product they bought"
+  },
+  {
+    id: "confused-user",
+    name: "Confused new user",
+    customerName: "Jordan",
+    emotion: "Confused",
+    scenario: "they can't access their account"
+  },
+  {
+    id: "delayed-order",
+    name: "Disappointed by delay",
+    customerName: "Sam",
+    emotion: "Disappointed",
+    scenario: "their order was delayed"
+  },
+  {
+    id: "damaged-product",
+    name: "Received damaged item",
+    customerName: "Taylor",
+    emotion: "Angry",
+    scenario: "they received a damaged product"
+  }
+];
+
+// Template definitions for evaluation
+const evaluationTemplates = [
+  {
+    id: "de-escalation",
+    name: "De-escalation focus",
+    criteria: ["Empathy", "De-escalation", "Policy adherence"]
+  },
+  {
+    id: "problem-solving",
+    name: "Problem solving focus",
+    criteria: ["Problem-solving", "Patience", "Product knowledge"]
+  },
+  {
+    id: "communication",
+    name: "Communication skills",
+    criteria: ["Active listening", "Professionalism", "Communication"]
+  },
+  {
+    id: "conflict-resolution",
+    name: "Conflict resolution",
+    criteria: ["Empathy", "Conflict resolution", "Time management"]
+  }
+];
 
 interface ScenarioBuilderProps {
   onBack: () => void;
@@ -37,6 +93,8 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
   const [customInputField, setCustomInputField] = useState<string | null>(null);
   const [customInputValue, setCustomInputValue] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [evaluationCriteria, setEvaluationCriteria] = useState<string[]>(["Empathy", "De-escalation", "Policy adherence"]);
+  const [dropdownView, setDropdownView] = useState<"main" | "templates">("main");
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const customerPersonas: CustomerPersona[] = [
@@ -83,16 +141,13 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
     emotion: "Frustrated",
     scenario: "they want a full refund for a product they bought",
     objective: "De-escalate the situation",
-    criteria1: "Empathy",
-    criteria2: "De-escalation",
-    criteria3: "Policy adherence",
     modality: "Audio",
     difficulty: "High"
   });
 
   const dropdownOptions = {
     trainee: ["Customer support executives", "Sales executives", "Managers", "Technical support team", "Add custom..."],
-    customerName: customerPersonas.map(p => p.name).concat("Add custom..."),
+    customerName: [...personaTemplates.map(t => `template:${t.id}`), ...customerPersonas.map(p => p.name), "Add custom..."],
     emotion: ["Frustrated", "Angry", "Confused", "Disappointed", "Anxious", "Add custom..."],
     scenario: [
       "they want a full refund for a product they bought",
@@ -108,9 +163,8 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
       "Gather customer feedback",
       "Add custom..."
     ],
-    criteria1: ["Empathy", "Active listening", "Problem-solving", "Communication", "Add custom..."],
-    criteria2: ["De-escalation", "Conflict resolution", "Patience", "Professionalism", "Add custom..."],
-    criteria3: ["Policy adherence", "Product knowledge", "Time management", "Documentation", "Add custom..."],
+    criteria: ["Empathy", "Active listening", "Problem-solving", "Communication", "De-escalation", "Conflict resolution", "Patience", "Professionalism", "Policy adherence", "Product knowledge", "Time management", "Documentation", "Add custom..."],
+    evaluationTemplate: evaluationTemplates.map(t => `template:${t.id}`),
     modality: ["Audio", "Chat"],
     difficulty: ["Low", "Medium", "High"]
   };
@@ -119,9 +173,57 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
     if (value === "Add custom...") {
       setCustomInputField(field);
       setCustomInputValue("");
+    } else if (field === "customerName" && value.startsWith("template:")) {
+      // Handle persona template selection
+      const templateId = value.replace("template:", "");
+      const template = personaTemplates.find(t => t.id === templateId);
+      if (template) {
+        setValues(prev => ({
+          ...prev,
+          customerName: template.customerName,
+          emotion: template.emotion,
+          scenario: template.scenario
+        }));
+      }
+      setOpenDropdown(null);
+    } else if (field === "evaluationTemplate" && value.startsWith("template:")) {
+      // Handle evaluation template selection
+      const templateId = value.replace("template:", "");
+      const template = evaluationTemplates.find(t => t.id === templateId);
+      if (template) {
+        setEvaluationCriteria(template.criteria);
+      }
+      setOpenDropdown(null);
     } else {
       setValues({ ...values, [field]: value });
       setOpenDropdown(null);
+    }
+  };
+
+  const handleCriteriaSelect = (index: number, value: string) => {
+    if (value === "Add custom...") {
+      setCustomInputField(`criteria_${index}`);
+      setCustomInputValue("");
+    } else {
+      const newCriteria = [...evaluationCriteria];
+      newCriteria[index] = value;
+      setEvaluationCriteria(newCriteria);
+      setOpenDropdown(null);
+    }
+  };
+
+  const handleAddCriteria = () => {
+    const availableOptions = dropdownOptions.criteria.filter(
+      opt => opt !== "Add custom..." && !evaluationCriteria.includes(opt)
+    );
+    if (availableOptions.length > 0) {
+      setEvaluationCriteria([...evaluationCriteria, availableOptions[0]]);
+    }
+  };
+
+  const handleRemoveCriteria = (index: number) => {
+    if (evaluationCriteria.length > 1) {
+      setEvaluationCriteria(evaluationCriteria.filter((_, i) => i !== index));
     }
   };
 
@@ -213,13 +315,141 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
     );
   };
 
-  const handleCustomSubmit = (field: string) => {
+const handleCustomSubmit = (field: string) => {
     if (customInputValue.trim()) {
-      setValues({ ...values, [field]: customInputValue.trim() });
+      if (field.startsWith("criteria_")) {
+        const index = parseInt(field.replace("criteria_", ""));
+        const newCriteria = [...evaluationCriteria];
+        newCriteria[index] = customInputValue.trim();
+        setEvaluationCriteria(newCriteria);
+      } else {
+        setValues({ ...values, [field]: customInputValue.trim() });
+      }
       setOpenDropdown(null);
       setCustomInputField(null);
       setCustomInputValue("");
     }
+  };
+
+  // Get contextual info for custom input fields
+  const getCustomInputConfig = (field: string) => {
+    const configs: { [key: string]: { label: string; placeholder: string; hint: string; examples?: string[] } } = {
+      trainee: {
+        label: "Custom trainee role",
+        placeholder: "e.g., HR representatives",
+        hint: "Enter the job role or team you want to train",
+        examples: ["HR representatives", "Account managers", "Team leads", "New hires"]
+      },
+      customerName: {
+        label: "Custom persona name",
+        placeholder: "e.g., Chris",
+        hint: "Enter a name for your custom customer persona",
+        examples: ["Chris", "Jamie", "Riley", "Casey"]
+      },
+      emotion: {
+        label: "Custom emotional state",
+        placeholder: "e.g., Skeptical",
+        hint: "Describe how the customer is feeling",
+        examples: ["Skeptical", "Impatient", "Overwhelmed", "Hopeful"]
+      },
+      scenario: {
+        label: "Custom scenario",
+        placeholder: "e.g., they need help with billing",
+        hint: "Describe the customer's situation or problem",
+        examples: ["they need help with billing", "they want to upgrade their plan", "they're comparing with competitors"]
+      },
+      objective: {
+        label: "Custom learning objective",
+        placeholder: "e.g., Build rapport with the customer",
+        hint: "What should the learner achieve in this scenario?",
+        examples: ["Build rapport with the customer", "Handle objections effectively", "Close the sale"]
+      }
+    };
+    
+    // Handle criteria fields
+    if (field.startsWith("criteria_")) {
+      return {
+        label: "Custom evaluation criteria",
+        placeholder: "e.g., Negotiation skills",
+        hint: "What competency should be evaluated?",
+        examples: ["Negotiation skills", "Technical accuracy", "Cultural sensitivity", "Closing ability"]
+      };
+    }
+    
+    return configs[field] || {
+      label: "Custom value",
+      placeholder: "Enter custom value",
+      hint: "",
+      examples: []
+    };
+  };
+
+  // Custom Input Component
+  const CustomInputPanel = ({ field, onSubmit, onCancel }: { field: string; onSubmit: () => void; onCancel: () => void }) => {
+    const config = getCustomInputConfig(field);
+    
+    return (
+      <div className="flex flex-col gap-[10px] px-[16px] py-[12px] w-full min-w-[280px]">
+        <div className="flex flex-col gap-[4px]">
+          <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[13px] text-[#1f2937]">
+            {config.label}
+          </p>
+          {config.hint && (
+            <p className="font-['Inter:Regular',sans-serif] text-[12px] text-[#6b7280]">
+              {config.hint}
+            </p>
+          )}
+        </div>
+        <input
+          type="text"
+          value={customInputValue}
+          onChange={(e) => setCustomInputValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              onSubmit();
+            } else if (e.key === "Escape") {
+              onCancel();
+            }
+          }}
+          className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px] border border-[#d7d6d1] rounded-[6px] px-[12px] py-[10px] outline-none focus:border-[#0975d7] focus:ring-1 focus:ring-[#0975d7]/20"
+          placeholder={config.placeholder}
+          autoFocus
+        />
+        {config.examples && config.examples.length > 0 && (
+          <div className="flex flex-col gap-[6px]">
+            <p className="font-['Inter:Medium',sans-serif] font-medium text-[11px] text-[#9ca3af] uppercase tracking-wide">
+              Suggestions
+            </p>
+            <div className="flex flex-wrap gap-[6px]">
+              {config.examples.map((example, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCustomInputValue(example)}
+                  className="px-[8px] py-[4px] rounded-[4px] bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[12px] text-[#4b5563] font-['Inter:Regular',sans-serif] transition-colors"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex gap-[8px] justify-end mt-[4px]">
+          <button
+            onClick={onCancel}
+            className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#6b697b] text-[13px] px-[12px] py-[6px] rounded-[6px] hover:bg-[#f5f5f5] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onSubmit}
+            disabled={!customInputValue.trim()}
+            className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-white text-[13px] bg-[#0975d7] px-[12px] py-[6px] rounded-[6px] hover:bg-[#0861b8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    );
   };
 
   const DropdownField = ({ 
@@ -241,6 +471,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
             setOpenDropdown(null);
             setCustomInputField(null);
             setCustomInputValue("");
+            setDropdownView("main");
           }
         }
       };
@@ -267,7 +498,12 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
       <div className="relative inline-block" ref={dropdownRef}>
         <button
           onClick={() => {
-            setOpenDropdown(openDropdown === field ? null : field);
+            if (openDropdown === field) {
+              setOpenDropdown(null);
+              setDropdownView("main");
+            } else {
+              setOpenDropdown(field);
+            }
             setCustomInputField(null);
             setCustomInputValue("");
           }}
@@ -304,43 +540,72 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
         {openDropdown === field && (
           <div className="absolute left-0 top-[calc(100%+4px)] bg-white rounded-[8px] shadow-[0px_4px_12px_rgba(0,0,0,0.15)] py-[4px] min-w-[200px] max-w-[400px] z-50">
             {customInputField === field ? (
-              <div className="flex flex-col gap-[8px] px-[16px] py-[10px] w-full">
-                <input
-                  type="text"
-                  value={customInputValue}
-                  onChange={(e) => setCustomInputValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleCustomSubmit(field);
-                    } else if (e.key === "Escape") {
-                      setCustomInputField(null);
-                      setCustomInputValue("");
-                    }
-                  }}
-                  className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px] border border-[#d7d6d1] rounded-[4px] px-[12px] py-[8px] outline-none focus:border-[#0975d7]"
-                  placeholder="Enter custom value"
-                  autoFocus
-                />
-                <div className="flex gap-[8px] justify-end">
-                  <button
-                    onClick={() => {
-                      setCustomInputField(null);
-                      setCustomInputValue("");
-                    }}
-                    className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#6b697b] text-[14px] px-[12px] py-[6px] rounded-[4px] hover:bg-[#f5f5f5] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleCustomSubmit(field)}
-                    className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-white text-[14px] bg-[#0975d7] px-[12px] py-[6px] rounded-[4px] hover:bg-[#0861b8] transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
+              <CustomInputPanel 
+                field={field}
+                onSubmit={() => handleCustomSubmit(field)}
+                onCancel={() => {
+                  setCustomInputField(null);
+                  setCustomInputValue("");
+                }}
+              />
             ) : (
-              options.map((option, index) => {
+              <>
+                {/* Templates View for Customer Field */}
+                {isCustomerFieldDropdown && dropdownView === "templates" ? (
+                  <>
+                    <button
+                      className="flex items-center gap-[8px] px-[12px] py-[8px] w-full hover:bg-[#f5f5f5] transition-colors text-left border-b border-[#f3f4f6]"
+                      onClick={() => setDropdownView("main")}
+                    >
+                      <IconArrowLeft className="size-[14px] text-[#6b697b]" stroke={2} />
+                      <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#6b697b] text-[13px]">
+                        Back to personas
+                      </p>
+                    </button>
+                    {personaTemplates.map((template) => (
+                      <button
+                        key={template.id}
+                        className="flex items-center gap-[12px] px-[16px] py-[10px] w-full hover:bg-[#f0f9ff] transition-colors text-left"
+                        onClick={() => {
+                          handleSelect(field, `template:${template.id}`);
+                          setDropdownView("main");
+                        }}
+                      >
+                        <div className="w-[32px] h-[32px] rounded-[6px] bg-[#e0f2fe] flex-shrink-0 flex items-center justify-center">
+                          <IconFileText className="size-[16px] text-[#0369a1]" stroke={1.5} />
+                        </div>
+                        <div className="flex flex-col items-start">
+                          <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#0369a1] text-[14px]">
+                            {template.name}
+                          </p>
+                          <p className="font-['Inter:Regular',sans-serif] leading-[16px] text-[#6b697b] text-[12px] mt-[2px]">
+                            {template.customerName} • {template.emotion}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {/* Use Template Entry Point for Customer Field */}
+                    {isCustomerFieldDropdown && (
+                      <button
+                        className="flex items-center gap-[10px] px-[16px] py-[10px] w-full hover:bg-[#f0f9ff] transition-colors text-left border-b border-[#f3f4f6] mb-[4px]"
+                        onClick={() => setDropdownView("templates")}
+                      >
+                        <div className="w-[28px] h-[28px] rounded-[6px] bg-[#e0f2fe] flex-shrink-0 flex items-center justify-center">
+                          <IconTemplate className="size-[14px] text-[#0369a1]" stroke={1.5} />
+                        </div>
+                        <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#0369a1] text-[14px]">
+                          Use template
+                        </p>
+                        <IconArrowRight className="size-[14px] text-[#0369a1] ml-auto" stroke={2} />
+                      </button>
+                    )}
+                    {options.map((option, index) => {
+                      // Skip template options (they're rendered separately)
+                      if (option.startsWith("template:")) return null;
+                  
                 if (isCustomerFieldDropdown && option !== "Add custom...") {
                   const persona = getCustomerPersona(option);
                   if (persona) {
@@ -428,17 +693,156 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
                 }
                 
                 return (
+                        <button
+                          key={index}
+                          className="flex items-center px-[16px] py-[10px] w-full hover:bg-[#f5f5f5] transition-colors text-left"
+                          onClick={() => handleSelect(field, option)}
+                        >
+                          <p className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px]">
+                            {option}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Criteria Dropdown Component for evaluation parameters
+  const CriteriaDropdown = ({ 
+    index, 
+    value 
+  }: { 
+    index: number; 
+    value: string;
+  }) => {
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const fieldKey = `criteria_${index}`;
+
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          if (openDropdown === fieldKey) {
+            setOpenDropdown(null);
+            setCustomInputField(null);
+            setCustomInputValue("");
+            setDropdownView("main");
+          }
+        }
+      };
+
+      if (openDropdown === fieldKey) {
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+        };
+      }
+    }, [openDropdown, fieldKey]);
+
+    return (
+      <div className="relative inline-block" ref={dropdownRef}>
+        <button
+          onClick={() => {
+            if (openDropdown === fieldKey) {
+              setOpenDropdown(null);
+              setDropdownView("main");
+            } else {
+              setOpenDropdown(fieldKey);
+            }
+            setCustomInputField(null);
+            setCustomInputValue("");
+          }}
+          className="inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
+        >
+          <span className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]">
+            {value}
+          </span>
+        </button>
+        {openDropdown === fieldKey && (
+          <div className="absolute left-0 top-[calc(100%+4px)] bg-white rounded-[8px] shadow-[0px_4px_12px_rgba(0,0,0,0.15)] py-[4px] min-w-[200px] max-w-[300px] z-50 max-h-[300px] overflow-y-auto">
+            {customInputField === fieldKey ? (
+              <CustomInputPanel 
+                field={fieldKey}
+                onSubmit={() => handleCustomSubmit(fieldKey)}
+                onCancel={() => {
+                  setCustomInputField(null);
+                  setCustomInputValue("");
+                }}
+              />
+            ) : dropdownView === "templates" ? (
+              <>
+                {/* Templates View */}
+                <button
+                  className="flex items-center gap-[8px] px-[12px] py-[8px] w-full hover:bg-[#f5f5f5] transition-colors text-left border-b border-[#f3f4f6]"
+                  onClick={() => setDropdownView("main")}
+                >
+                  <IconArrowLeft className="size-[14px] text-[#6b697b]" stroke={2} />
+                  <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#6b697b] text-[13px]">
+                    Back to criteria
+                  </p>
+                </button>
+                {evaluationTemplates.map((template) => (
                   <button
-                    key={index}
+                    key={template.id}
+                    className="flex items-center gap-[8px] px-[12px] py-[10px] w-full hover:bg-[#f0f9ff] transition-colors text-left"
+                    onClick={() => {
+                      setEvaluationCriteria(template.criteria);
+                      setOpenDropdown(null);
+                      setDropdownView("main");
+                    }}
+                  >
+                    <IconFileText className="size-[16px] text-[#0369a1]" stroke={1.5} />
+                    <div className="flex flex-col items-start">
+                      <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#0369a1] text-[14px]">
+                        {template.name}
+                      </p>
+                      <p className="font-['Inter:Regular',sans-serif] leading-[16px] text-[#6b697b] text-[11px] mt-[1px]">
+                        {template.criteria.join(", ")}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </>
+            ) : (
+              <>
+                {/* Main View with Use Template Entry */}
+                <button
+                  className="flex items-center gap-[10px] px-[16px] py-[10px] w-full hover:bg-[#f0f9ff] transition-colors text-left border-b border-[#f3f4f6] mb-[4px]"
+                  onClick={() => setDropdownView("templates")}
+                >
+                  <div className="w-[28px] h-[28px] rounded-[6px] bg-[#e0f2fe] flex-shrink-0 flex items-center justify-center">
+                    <IconTemplate className="size-[14px] text-[#0369a1]" stroke={1.5} />
+                  </div>
+                  <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#0369a1] text-[14px]">
+                    Use template
+                  </p>
+                  <IconArrowRight className="size-[14px] text-[#0369a1] ml-auto" stroke={2} />
+                </button>
+                {dropdownOptions.criteria.map((option, optIndex) => (
+                  <button
+                    key={optIndex}
                     className="flex items-center px-[16px] py-[10px] w-full hover:bg-[#f5f5f5] transition-colors text-left"
-                    onClick={() => handleSelect(field, option)}
+                    onClick={() => {
+                      if (option === "Add custom...") {
+                        setCustomInputField(fieldKey);
+                        setCustomInputValue("");
+                      } else {
+                        handleCriteriaSelect(index, option);
+                      }
+                    }}
                   >
                     <p className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px]">
                       {option}
                     </p>
                   </button>
-                );
-              })
+                ))}
+              </>
             )}
           </div>
         )}
@@ -538,13 +942,24 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
               </p>
 
               {/* Section 3: Evaluation */}
-              <p className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563] flex flex-wrap items-center gap-x-[6px] gap-y-[8px] mt-[12px]">
-                <span>Evaluate on</span>
-                <DropdownField field="criteria1" value={values.criteria1} options={dropdownOptions.criteria1} />
-                <DropdownField field="criteria2" value={values.criteria2} options={dropdownOptions.criteria2} />
-                <span>&</span>
-                <DropdownField field="criteria3" value={values.criteria3} options={dropdownOptions.criteria3} />
-              </p>
+              <div className="flex flex-wrap items-center gap-x-[6px] gap-y-[8px] mt-[12px]">
+                <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">Evaluate on</span>
+                {evaluationCriteria.map((criterion, index) => (
+                  <React.Fragment key={index}>
+                    {index > 0 && index === evaluationCriteria.length - 1 && (
+                      <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">&</span>
+                    )}
+                    <CriteriaDropdown index={index} value={criterion} />
+                  </React.Fragment>
+                ))}
+                <button
+                  onClick={handleAddCriteria}
+                  className="inline-flex items-center justify-center size-[28px] rounded-full bg-[#f0f9ff] hover:bg-[#e0f2fe] border border-[#bae6fd] text-[#0369a1] transition-all"
+                  title="Add evaluation parameter"
+                >
+                  <IconPlus className="size-[14px]" stroke={2} />
+                </button>
+              </div>
 
               {/* Fading Divider */}
               <div className="h-[1px] mt-[20px] mb-[16px] w-[60%] bg-gradient-to-r from-[#e5e7eb] via-[#e5e7eb]/30 to-transparent" />
@@ -562,7 +977,12 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
                 className="bg-[#c74900] flex gap-[8px] items-center justify-center px-[20px] py-[12px] rounded-[8px] hover:bg-[#b04200] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-[28px] w-fit"
                 onClick={() => {
                   setIsGenerating(true);
-                  onGenerateScenario(values);
+                  onGenerateScenario({
+                    ...values,
+                    criteria1: evaluationCriteria[0] || "",
+                    criteria2: evaluationCriteria[1] || "",
+                    criteria3: evaluationCriteria[2] || ""
+                  });
                 }}
                 disabled={isGenerating}
               >

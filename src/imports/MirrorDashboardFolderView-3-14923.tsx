@@ -160,6 +160,100 @@ function Edit1() {
     </div>
   );
 }
+
+function TemplateIcon() {
+  return (
+    <div className="relative shrink-0 size-[16px]">
+      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 16 16">
+        <path d="M2 4C2 2.89543 2.89543 2 4 2H12C13.1046 2 14 2.89543 14 4V5H2V4Z" fill="currentColor" />
+        <path d="M2 6H6V14H4C2.89543 14 2 13.1046 2 12V6Z" fill="currentColor" />
+        <path d="M7 6H14V12C14 13.1046 13.1046 14 12 14H7V6Z" fill="currentColor" fillOpacity="0.5" />
+      </svg>
+    </div>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <div className="relative shrink-0 size-[16px]">
+      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 16 16">
+        <path d="M4 6L8 10L12 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      </svg>
+    </div>
+  );
+}
+
+type TemplateSelectProps = {
+  label?: string;
+  placeholder?: string;
+};
+
+function TemplateSelect({ label = "Template", placeholder = "Select template" }: TemplateSelectProps) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>(null);
+  
+  const templates = [
+    { id: "1", name: "Default template" },
+    { id: "2", name: "Customer service" },
+    { id: "3", name: "Sales negotiation" },
+    { id: "4", name: "Technical support" },
+  ];
+  
+  return (
+    <div className="relative shrink-0">
+      <div className="content-stretch flex flex-col gap-[6px] items-start relative">
+        {label && (
+          <p className="font-['Inter:Medium',sans-serif] font-medium leading-[18px] not-italic text-[#6b697b] text-[12px]">
+            {label}
+          </p>
+        )}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="bg-white content-stretch flex gap-[8px] items-center justify-between px-[12px] py-[10px] relative rounded-[8px] min-w-[200px] cursor-pointer hover:bg-[#f9f9fb] transition-colors"
+          style={{ border: "1px solid #e0dfe6" }}
+        >
+          <div className="flex gap-[8px] items-center">
+            <TemplateIcon />
+            <p className={clsx(
+              "font-['Inter:Regular',sans-serif] leading-[20px] not-italic text-[14px]",
+              selectedTemplate ? "text-[#1f1f32]" : "text-[#8c899f]"
+            )}>
+              {selectedTemplate || placeholder}
+            </p>
+          </div>
+          <div className={clsx("transition-transform", isOpen && "rotate-180")}>
+            <ChevronDownIcon />
+          </div>
+        </button>
+        
+        {isOpen && (
+          <div 
+            className="absolute top-full left-0 mt-[4px] bg-white rounded-[8px] shadow-[0px_4px_16px_rgba(0,0,0,0.12)] z-10 min-w-[200px] overflow-hidden"
+            style={{ border: "1px solid #e0dfe6" }}
+          >
+            {templates.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => {
+                  setSelectedTemplate(template.name);
+                  setIsOpen(false);
+                }}
+                className={clsx(
+                  "w-full px-[12px] py-[10px] text-left font-['Inter:Regular',sans-serif] leading-[20px] text-[14px] cursor-pointer transition-colors",
+                  selectedTemplate === template.name 
+                    ? "bg-[#f0f9ff] text-[#0975d7]" 
+                    : "text-[#1f1f32] hover:bg-[#f5f5f5]"
+                )}
+              >
+                {template.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 type Text1Props = {
   text: string;
 };
@@ -859,6 +953,45 @@ function Frame1() {
   );
 }
 
+type TabItemProps = {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+};
+
+function TabItem({ label, isActive, onClick }: TabItemProps) {
+  if (isActive) {
+    return (
+      <div 
+        className="bg-[#f0f9ff] relative shrink-0 w-full h-[44px] cursor-pointer"
+        onClick={onClick}
+      >
+        <div aria-hidden="true" className="absolute border-[#eee] border-[0px_0px_1px] border-solid inset-0 pointer-events-none" />
+        <div className="flex flex-row items-center size-full">
+          <div className="content-stretch flex gap-[10px] items-center p-[12px] relative size-full">
+            <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] not-italic relative shrink-0 text-[14px] text-black text-center text-nowrap">{label}</p>
+            <div className="absolute bg-[#0975d7] h-[43px] left-0 rounded-[5px] top-0 w-[3px]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div 
+      className="relative shrink-0 w-full cursor-pointer hover:bg-[#f5f5f5] transition-colors"
+      onClick={onClick}
+    >
+      <div aria-hidden="true" className="absolute border-[#eee] border-[0px_0px_1px] border-solid inset-0 pointer-events-none" />
+      <div className="flex flex-row items-center size-full">
+        <div className="content-stretch flex items-center p-[12px] relative w-full">
+          <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] not-italic relative shrink-0 text-[#8c899f] text-[14px] text-center text-nowrap">{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Frame4() {
   return (
     <Wrapper>
@@ -933,6 +1066,27 @@ function Frame16() {
   );
 }
 
+type SidebarNavProps = {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+};
+
+function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) {
+  return (
+    <div className="h-[768px] relative shrink-0 w-[163px]">
+      <div className="content-stretch flex flex-col items-start overflow-clip relative rounded-[inherit] size-full">
+        <TabItem label="Context" isActive={activeTab === "context"} onClick={() => onTabChange("context")} />
+        <TabItem label="Scenario" isActive={activeTab === "scenario"} onClick={() => onTabChange("scenario")} />
+        <TabItem label="Customer persona" isActive={activeTab === "persona"} onClick={() => onTabChange("persona")} />
+        <TabItem label="Evaluation" isActive={activeTab === "evaluation"} onClick={() => onTabChange("evaluation")} />
+        <TabItem label="Exit conditions" isActive={activeTab === "exit"} onClick={() => onTabChange("exit")} />
+        <Frame16 />
+      </div>
+      <div aria-hidden="true" className="absolute border-[#e7e7e7] border-[0px_1px_0px_0px] border-solid inset-0 pointer-events-none" />
+    </div>
+  );
+}
+
 function Frame10() {
   return (
     <div className="h-[768px] relative shrink-0 w-[163px]">
@@ -952,9 +1106,12 @@ function Frame10() {
 function Frame6() {
   return (
     <div className="relative shrink-0 w-full">
-      <div className="content-stretch flex flex-col gap-[4px] items-start not-italic px-[12px] py-0 relative text-[#1f1f32] text-nowrap w-full">
-        <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[28px] relative shrink-0 text-[20px]">Evaluation</p>
-        <p className="font-['Inter:Regular',sans-serif] leading-[20px] relative shrink-0 text-[14px]">Select competencies to assess</p>
+      <div className="content-stretch flex items-start justify-between px-[12px] py-0 relative w-full">
+        <div className="content-stretch flex flex-col gap-[4px] items-start not-italic text-[#1f1f32] text-nowrap">
+          <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[28px] relative shrink-0 text-[20px]">Evaluation</p>
+          <p className="font-['Inter:Regular',sans-serif] leading-[20px] relative shrink-0 text-[14px]">Select competencies to assess</p>
+        </div>
+        <TemplateSelect label="Evaluation template" placeholder="Select evaluation template" />
       </div>
     </div>
   );
@@ -964,6 +1121,86 @@ function Frame8() {
   return (
     <div className="content-stretch flex flex-col items-center justify-center pb-0 pt-[16px] px-0 relative shrink-0 w-full">
       <Frame6 />
+    </div>
+  );
+}
+
+// Persona Section Components
+function PersonaHeader() {
+  return (
+    <div className="relative shrink-0 w-full">
+      <div className="content-stretch flex items-start justify-between px-[12px] py-0 relative w-full">
+        <div className="content-stretch flex flex-col gap-[4px] items-start not-italic text-[#1f1f32] text-nowrap">
+          <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[28px] relative shrink-0 text-[20px]">Customer persona</p>
+          <p className="font-['Inter:Regular',sans-serif] leading-[20px] relative shrink-0 text-[14px]">Define the customer character for this scenario</p>
+        </div>
+        <TemplateSelect label="Persona template" placeholder="Select persona template" />
+      </div>
+    </div>
+  );
+}
+
+function PersonaHeaderWrapper() {
+  return (
+    <div className="content-stretch flex flex-col items-center justify-center pb-0 pt-[16px] px-0 relative shrink-0 w-full">
+      <PersonaHeader />
+    </div>
+  );
+}
+
+// Persona Content Section
+function PersonaCard() {
+  return (
+    <Wrapper1>
+      <div className="content-stretch flex gap-[12px] items-center relative shrink-0 w-full">
+        <div className="bg-[#e8e7ed] rounded-full size-[48px] flex items-center justify-center overflow-hidden shrink-0">
+          <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[#6b697b] text-[18px]">A</p>
+        </div>
+        <div className="content-stretch flex flex-col gap-[2px] items-start">
+          <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[24px] not-italic text-[#2b2b40] text-[16px]">Alex Thompson</p>
+          <p className="font-['Inter:Regular',sans-serif] leading-[20px] not-italic text-[#6b697b] text-[14px]">Frustrated customer seeking refund</p>
+        </div>
+      </div>
+      <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+        <div className="content-stretch flex gap-[8px] items-center">
+          <Text1 text="Impatient" />
+          <Text1 text="Direct" />
+          <Text1 text="Skeptical" />
+        </div>
+      </div>
+      <p className="font-['Inter:Regular',sans-serif] leading-[22px] not-italic text-[#2b2b40] text-[14px]">
+        A 35-year-old professional who purchased a premium subscription last month. Experiencing technical issues and has already contacted support twice without resolution. Currently upset and considering cancellation.
+      </p>
+      <div className="content-stretch flex gap-[16px] items-center relative shrink-0">
+        <div className="content-stretch flex gap-[4px] items-center">
+          <p className="font-['Noto_Sans:Regular',sans-serif] font-normal leading-[1.4] text-[#2b2b40] text-[14px]" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>
+            tone
+          </p>
+          <Text1 text="Assertive" />
+        </div>
+        <Edit1 />
+      </div>
+    </Wrapper1>
+  );
+}
+
+function PersonaContent() {
+  return (
+    <Wrapper9>
+      <PersonaCard />
+    </Wrapper9>
+  );
+}
+
+function PersonaSection() {
+  return (
+    <div className="basis-0 content-stretch flex flex-col gap-[16px] grow items-start min-h-px min-w-px relative shrink-0">
+      <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
+        <PersonaHeaderWrapper />
+      </div>
+      <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
+        <PersonaContent />
+      </div>
     </div>
   );
 }
@@ -1125,6 +1362,27 @@ function Frame11() {
   );
 }
 
+function ScenarioBuilderContent() {
+  const [activeTab, setActiveTab] = React.useState("evaluation");
+  
+  const renderContent = () => {
+    switch (activeTab) {
+      case "persona":
+        return <PersonaSection />;
+      case "evaluation":
+      default:
+        return <Frame11 />;
+    }
+  };
+  
+  return (
+    <div className="content-stretch flex items-start relative shrink-0 w-full">
+      <SidebarNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {renderContent()}
+    </div>
+  );
+}
+
 function Frame7() {
   return (
     <div className="content-stretch flex items-start relative shrink-0 w-full">
@@ -1138,7 +1396,7 @@ function Frame() {
   return (
     <div className="h-[768px] relative rounded-[12px] shrink-0 w-full">
       <div className="content-stretch flex flex-col items-start overflow-clip relative rounded-[inherit] size-full">
-        <Frame7 />
+        <ScenarioBuilderContent />
       </div>
       <div aria-hidden="true" className="absolute border border-[#ececf3] border-solid inset-0 pointer-events-none rounded-[12px]" />
     </div>
