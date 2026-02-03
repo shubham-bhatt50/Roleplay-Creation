@@ -292,7 +292,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
   };
 
   const handleRemoveCriteria = (index: number) => {
-    if (evaluationCriteria.length > 1) {
+    if (evaluationCriteria.length > 2) {
       setEvaluationCriteria(evaluationCriteria.filter((_, i) => i !== index));
     }
   };
@@ -1157,7 +1157,21 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                     {index > 0 && index === evaluationCriteria.length - 1 && (
                       <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">&</span>
                     )}
-                    <CriteriaDropdown index={index} value={criterion} />
+                    <div className="inline-flex items-center gap-[4px]">
+                      <CriteriaDropdown index={index} value={criterion} />
+                      {evaluationCriteria.length > 2 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveCriteria(index);
+                          }}
+                          className="inline-flex items-center justify-center size-[20px] rounded-full bg-[#fee2e2] hover:bg-[#fecaca] border border-[#fca5a5] text-[#dc2626] transition-all"
+                          title="Remove evaluation parameter"
+                        >
+                          <IconX className="size-[12px]" stroke={2} />
+                        </button>
+                      )}
+                    </div>
                   </React.Fragment>
                 ))}
                 <button
