@@ -12,7 +12,11 @@ const existingRoleplays = [
     createdAt: "2026-01-28",
     modality: "Voice",
     difficulty: "High",
-    status: "Published"
+    status: "Published",
+    attachedWorkflow: {
+      id: "3",
+      name: "Refund request | Billing system"
+    }
   },
   {
     id: "2",
@@ -22,7 +26,8 @@ const existingRoleplays = [
     createdAt: "2026-01-25",
     modality: "Chat",
     difficulty: "Medium",
-    status: "Draft"
+    status: "Draft",
+    attachedWorkflow: null
   },
   {
     id: "3",
@@ -32,7 +37,11 @@ const existingRoleplays = [
     createdAt: "2026-01-20",
     modality: "Voice",
     difficulty: "Low",
-    status: "Published"
+    status: "Published",
+    attachedWorkflow: {
+      id: "1",
+      name: "New claim | Guidewire 2"
+    }
   },
   {
     id: "4",
@@ -42,7 +51,8 @@ const existingRoleplays = [
     createdAt: "2026-01-15",
     modality: "Hybrid",
     difficulty: "Medium",
-    status: "Published"
+    status: "Published",
+    attachedWorkflow: null
   },
   {
     id: "5",
@@ -52,7 +62,11 @@ const existingRoleplays = [
     createdAt: "2026-01-10",
     modality: "Voice",
     difficulty: "High",
-    status: "Draft"
+    status: "Draft",
+    attachedWorkflow: {
+      id: "5",
+      name: "Cancel order | Order system"
+    }
   }
 ];
 
@@ -60,7 +74,7 @@ interface PromptScreenProps {
   onBack: () => void;
   onSwitchToBuilder: () => void;
   onGenerateScenario: () => void;
-  onNavigateToDetail?: (roleplayId: string) => void;
+  onNavigateToDetail?: (roleplayId: string, workflow?: { id: string; name: string } | null) => void;
 }
 
 const promptTemplates = [
@@ -169,7 +183,7 @@ export function PromptScreen({ onBack, onSwitchToBuilder, onGenerateScenario, on
                   onClick={() => {
                     if (onNavigateToDetail) {
                       setIsSidebarOpen(false);
-                      onNavigateToDetail(roleplay.id);
+                      onNavigateToDetail(roleplay.id, roleplay.attachedWorkflow);
                     }
                   }}
                   className="px-[20px] py-[16px] border-b border-[#f3f4f6] hover:bg-[#f9fafb] transition-colors cursor-pointer group"
@@ -209,6 +223,16 @@ export function PromptScreen({ onBack, onSwitchToBuilder, onGenerateScenario, on
                           {roleplay.difficulty} difficulty
                         </span>
                       </div>
+
+                      {/* Workflow Indicator */}
+                      {roleplay.attachedWorkflow && (
+                        <div className="flex items-center gap-[6px] mt-[8px]">
+                          <div className="w-[4px] h-[4px] rounded-full bg-[#0975d7]"></div>
+                          <span className="font-['Inter:Regular',sans-serif] text-[11px] text-[#0975d7]">
+                            Attached: {roleplay.attachedWorkflow.name}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}

@@ -25,6 +25,7 @@ interface ScenarioDetailScreenProps {
   onBack: () => void;
   onAttachWorkflow?: (workflowId: string, workflowName: string) => void;
   scenarioData?: ScenarioData | null;
+  attachedWorkflow?: { id: string; name: string } | null;
 }
 
 type TabType = "scenario" | "persona" | "evaluation" | "exit" | "settings";
@@ -40,9 +41,11 @@ const availableWorkflows = [
   { id: "7", name: "Update payment | Billing system", type: "Workflow" },
 ];
 
-export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData }: ScenarioDetailScreenProps) {
+export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, attachedWorkflow }: ScenarioDetailScreenProps) {
   const [activeTab, setActiveTab] = useState<TabType>("scenario");
   const [activeMode, setActiveMode] = useState<"voice" | "chat" | "hybrid">("voice");
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
   const getDefaultTitle = (data: ScenarioData | null | undefined): string => {
     if (!data) return "Dealing with angry customer for refund scenario";
     return `${data.customerName} - ${data.emotion} customer scenario`;
@@ -103,7 +106,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData }:
   // Workflow modal state
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
   const [workflowTab, setWorkflowTab] = useState<"draft" | "ready">("ready");
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState("1"); // Pre-select first workflow
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState(attachedWorkflow?.id || "1"); // Pre-select attached workflow or first workflow
   const [workflowSearchQuery, setWorkflowSearchQuery] = useState("");
 
   // Evaluation state
@@ -864,14 +867,27 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData }:
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
-              {/* Attach Button */}
+              {/* Attach/Update Button */}
               <button 
                 className="bg-[#d0450b] hover:bg-[#b83d0a] text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2"
-                onClick={() => setShowWorkflowModal(true)}
+                onClick={() => {
+                  if (attachedWorkflow) {
+                    // If workflow is already attached, show warning dialog first
+                    setShowWorkflowModal(true);
+                  } else {
+                    setShowWorkflowModal(true);
+                  }
+                }}
               >
-                Attach to workflow
+                {attachedWorkflow ? "Update workflow" : "Attach to workflow"}
                 <IconArrowRight className="size-4" stroke={2} />
               </button>
+              {attachedWorkflow && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-[#e0f2fe] rounded text-xs text-[#0369a1]">
+                  <div className="w-2 h-2 rounded-full bg-[#0369a1]"></div>
+                  <span>{attachedWorkflow.name}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -2424,16 +2440,95 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData }:
                     const selectedWorkflow = availableWorkflows.find(
                       (w) => w.id === selectedWorkflowId
                     );
-                    if (selectedWorkflow && onAttachWorkflow) {
-                      onAttachWorkflow(selectedWorkflow.id, selectedWorkflow.name);
+                    if (selectedWorkflow) {
+                      // If workflow is already attached and user is selecting a different one, show warning
+                      if (attachedWorkflow && attachedWorkflow.id !== selectedWorkflowId) {
+                        setPendingWorkflowId(selectedWorkflowId);
+                        setShowWarningDialog(true);
+                        setShowWorkflowModal(false);
+                      } else if (onAttachWorkflow) {
+                        // If no workflow attached or same workflow selected, attach directly
+                        onAttachWorkflow(selectedWorkflow.id, selectedWorkflow.name);
+                        setShowWorkflowModal(false);
+                      }
                     }
-                    setShowWorkflowModal(false);
                   }}
                   className="px-5 py-2.5 text-sm font-medium text-white bg-[#0975d7] rounded-md hover:bg-[#0861b8] transition-colors"
                 >
-                  Attach
+                  {attachedWorkflow ? "Update" : "Attach"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning Dialog for Workflow Update */}
+      {showWarningDialog && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-5 border-b border-[#eee]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#fef3c7] flex items-center justify-center flex-shrink-0">
+                  <IconAlertCircle className="size-5 text-[#f59e0b]" stroke={2} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-[#1f2937]">Update workflow?</h3>
+                  <p className="text-sm text-[#6b7280] mt-1">This will replace the current workflow</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4">
+              <div className="bg-[#fef3c7] border border-[#fde68a] rounded-md p-4 mb-4">
+                <p className="text-sm text-[#92400e] font-medium mb-2">Warning</p>
+                <p className="text-sm text-[#92400e]">
+                  Updating the workflow will disrupt any ongoing training sessions, active learners, or scheduled activities associated with this roleplay. This action cannot be undone.
+                </p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#6b7280] mt-1.5 flex-shrink-0"></div>
+                  <p className="text-[#4b5563]">
+                    <span className="font-medium">Current workflow:</span> {attachedWorkflow?.name}
+                  </p>
+                </div>
+                {pendingWorkflowId && (
+                  <div className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#0975d7] mt-1.5 flex-shrink-0"></div>
+                    <p className="text-[#4b5563]">
+                      <span className="font-medium">New workflow:</span> {availableWorkflows.find(w => w.id === pendingWorkflowId)?.name}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-[#eee] flex items-center justify-end gap-3 bg-[#fafafa]">
+              <button
+                onClick={() => {
+                  setShowWarningDialog(false);
+                  setPendingWorkflowId(null);
+                }}
+                className="px-5 py-2.5 text-sm font-medium text-[#3d3c52] bg-white border border-[#d7d6d1] rounded-md hover:bg-[#f5f5f5] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (pendingWorkflowId && onAttachWorkflow) {
+                    const selectedWorkflow = availableWorkflows.find(
+                      (w) => w.id === pendingWorkflowId
+                    );
+                    if (selectedWorkflow) {
+                      onAttachWorkflow(selectedWorkflow.id, selectedWorkflow.name);
+                    }
+                  }
+                  setShowWarningDialog(false);
+                  setPendingWorkflowId(null);
+                }}
+                className="px-5 py-2.5 text-sm font-medium text-white bg-[#dc2626] rounded-md hover:bg-[#b91c1c] transition-colors"
+              >
+                Update workflow
+              </button>
             </div>
           </div>
         </div>

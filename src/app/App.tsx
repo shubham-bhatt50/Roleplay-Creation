@@ -34,6 +34,7 @@ export default function App() {
   const [attachedRoleplays, setAttachedRoleplays] = useState<AttachedRoleplay[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [scenarioData, setScenarioData] = useState<ScenarioData | null>(null);
+  const [attachedWorkflow, setAttachedWorkflow] = useState<{ id: string; name: string } | null>(null);
 
   const handleGenerateScenario = (data: ScenarioData) => {
     setScenarioData(data);
@@ -63,7 +64,7 @@ export default function App() {
     setCurrentScreen("dashboard");
   };
 
-  const handleNavigateToDetail = (roleplayId: string) => {
+  const handleNavigateToDetail = (roleplayId: string, workflow?: { id: string; name: string } | null) => {
     // Create scenario data from roleplay ID (in a real app, you'd fetch this)
     // For now, we'll use default data
     const defaultScenarioData: ScenarioData = {
@@ -79,6 +80,7 @@ export default function App() {
       difficulty: "High"
     };
     setScenarioData(defaultScenarioData);
+    setAttachedWorkflow(workflow || null);
     setCurrentScreen("scenarioDetail");
   };
 
@@ -138,6 +140,7 @@ export default function App() {
               onBack={() => setCurrentScreen("dashboard")}
               onAttachWorkflow={handleAttachWorkflow}
               scenarioData={scenarioData}
+              attachedWorkflow={attachedWorkflow}
             />
           )}
           {currentScreen === "simulation" && (
