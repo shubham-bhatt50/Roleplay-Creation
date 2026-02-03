@@ -140,19 +140,17 @@ export function Dashboard({ onNavigateToRoleplay, onNavigateToSimulation, onNavi
             </thead>
             <tbody>
               {[
-                { id: "1", name: "H2 2025 Learning", count: "7", type: "Simulation", creator: "Mark S", updated: "Simulation", isWorkflow: false },
-                { id: "2", name: "Guidewire environment 2", count: "5", type: "Simulation", creator: "Ann Perkins", updated: "Simulation", isWorkflow: false },
-                { id: "3", name: "Guidewire workflow list archive 2", count: "9", type: "Simulation", creator: "Ann Perkins", updated: "Simulation", isWorkflow: false },
-                { id: "4", name: "New claim | Guidewire 2", count: "5", type: "Workflow", creator: "Juliette Nichols", updated: "Simulation", isWorkflow: true },
+                { id: "1", name: "H2 2025 Learning", count: "7", type: "Workflow", creator: "Mark S", updated: "Jan 15, 2026" },
+                { id: "2", name: "Guidewire environment 2", count: "5", type: "Workflow", creator: "Ann Perkins", updated: "Jan 12, 2026" },
+                { id: "3", name: "Guidewire workflow list archive 2", count: "9", type: "Workflow", creator: "Ann Perkins", updated: "Jan 10, 2026" },
+                { id: "4", name: "New claim | Guidewire 2", count: "5", type: "Workflow", creator: "Juliette Nichols", updated: "Jan 8, 2026" },
+                { id: "5", name: "Refund request | Billing system", count: "3", type: "Workflow", creator: "Sarah Johnson", updated: "Jan 5, 2026" },
+                { id: "6", name: "Return label | Shipping portal", count: "4", type: "Workflow", creator: "Mike Chen", updated: "Jan 3, 2026" },
               ].map((row, index) => (
                 <tr 
                   key={index} 
-                  className={`border-b border-[#ececf3] hover:bg-[#f9f9f9] ${row.isWorkflow ? 'cursor-pointer' : ''}`}
-                  onClick={() => {
-                    if (row.isWorkflow) {
-                      handleWorkflowClick(row.id, row.name);
-                    }
-                  }}
+                  className="border-b border-[#ececf3] hover:bg-[#f9f9f9] cursor-pointer"
+                  onClick={() => handleWorkflowClick(row.id, row.name)}
                 >
                   <td className="p-[16px]">
                     <div className="flex items-center gap-[12px]">
@@ -161,19 +159,15 @@ export function Dashboard({ onNavigateToRoleplay, onNavigateToSimulation, onNavi
                         className="size-[16px] rounded border-[#d7d6d1]" 
                         onClick={(e) => e.stopPropagation()}
                       />
-                      {row.isWorkflow ? (
-                        <div className="flex items-center justify-center size-[16px]">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b697b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="3" width="7" height="7" />
-                            <rect x="14" y="3" width="7" height="7" />
-                            <rect x="14" y="14" width="7" height="7" />
-                            <rect x="3" y="14" width="7" height="7" />
-                          </svg>
-                        </div>
-                      ) : (
-                        <IconFolder className="size-[16px] text-[#6b697b]" stroke={2} />
-                      )}
-                      <span className={`font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px] ${row.isWorkflow ? 'hover:text-[#0975d7] hover:underline' : ''}`}>{row.name}</span>
+                      <div className="flex items-center justify-center size-[16px]">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b697b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="7" height="7" />
+                          <rect x="14" y="3" width="7" height="7" />
+                          <rect x="14" y="14" width="7" height="7" />
+                          <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                      </div>
+                      <span className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px] hover:text-[#0975d7] hover:underline">{row.name}</span>
                       <span className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#6b697b] text-[14px]">{row.count}</span>
                       {hasRoleplay(row.name) && (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ecfdf5] text-[#059669] text-xs font-medium">

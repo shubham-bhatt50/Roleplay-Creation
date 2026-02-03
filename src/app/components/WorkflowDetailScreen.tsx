@@ -1,9 +1,16 @@
 import { useState } from "react";
-import { IconArrowLeft, IconArrowUpRight, IconDots, IconArrowsMaximize, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { IconArrowLeft, IconArrowUpRight, IconDots, IconArrowsMaximize, IconChevronLeft, IconChevronRight, IconPlus, IconX, IconUsers, IconSearch } from "@tabler/icons-react";
 
 interface AttachedRoleplay {
   id: string;
   name: string;
+}
+
+interface DraftRoleplay {
+  id: string;
+  name: string;
+  createdBy: string;
+  createdAt: string;
 }
 
 interface WorkflowDetailScreenProps {
@@ -12,7 +19,17 @@ interface WorkflowDetailScreenProps {
   workflowName: string;
   attachedRoleplay?: AttachedRoleplay | null;
   onNavigateToRoleplay?: (roleplayId: string) => void;
+  onCreateNewRoleplay?: (workflowId: string, workflowName: string) => void;
+  onAttachRoleplay?: (roleplayId: string, roleplayName: string) => void;
 }
+
+// Sample draft roleplays
+const draftRoleplays: DraftRoleplay[] = [
+  { id: "draft-1", name: "Angry customer refund scenario", createdBy: "Sarah Johnson", createdAt: "2 days ago" },
+  { id: "draft-2", name: "Product exchange request", createdBy: "Mark Wilson", createdAt: "1 week ago" },
+  { id: "draft-3", name: "Billing dispute resolution", createdBy: "Ann Perkins", createdAt: "3 days ago" },
+  { id: "draft-4", name: "Technical support escalation", createdBy: "John Smith", createdAt: "5 days ago" },
+];
 
 // Sample capture data
 const captures = [
@@ -41,13 +58,29 @@ export function WorkflowDetailScreen({
   workflowId, 
   workflowName, 
   attachedRoleplay,
-  onNavigateToRoleplay 
+  onNavigateToRoleplay,
+  onCreateNewRoleplay,
+  onAttachRoleplay
 }: WorkflowDetailScreenProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [showAttachModal, setShowAttachModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [localAttachedRoleplay, setLocalAttachedRoleplay] = useState<AttachedRoleplay | null>(attachedRoleplay || null);
+  
   const totalPages = 1;
   const itemsPerPage = 6;
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, captures.length);
+
+  const filteredRoleplays = draftRoleplays.filter(rp => 
+    rp.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAttachRoleplay = (roleplay: DraftRoleplay) => {
+    setLocalAttachedRoleplay({ id: roleplay.id, name: roleplay.name });
+    onAttachRoleplay?.(roleplay.id, roleplay.name);
+    setShowAttachModal(false);
+  };
 
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f7] min-h-0 overflow-hidden">
@@ -85,15 +118,25 @@ export function WorkflowDetailScreen({
             </div>
 
             {/* Attached Roleplay Link - Below Title */}
-            {attachedRoleplay && (
+            {localAttachedRoleplay ? (
               <button 
                 className="flex items-center gap-1.5 mt-2 ml-11 text-[13px] text-[#8d8ba7] hover:text-[#6b6b80] transition-colors group"
-                onClick={() => onNavigateToRoleplay?.(attachedRoleplay.id)}
+                onClick={() => onNavigateToRoleplay?.(localAttachedRoleplay.id)}
               >
                 <div className="w-5 h-5 rounded-full bg-[#f0f0f5] flex items-center justify-center group-hover:bg-[#e5e5ea] transition-colors">
                   <IconArrowUpRight className="w-3 h-3 text-[#8d8ba7]" stroke={2} />
                 </div>
-                <span className="group-hover:underline">{attachedRoleplay.name}</span>
+                <span className="group-hover:underline">{localAttachedRoleplay.name}</span>
+              </button>
+            ) : (
+              <button 
+                className="flex items-center gap-1.5 mt-2 ml-11 text-[13px] text-[#0975d7] hover:text-[#0861b8] transition-colors group"
+                onClick={() => setShowAttachModal(true)}
+              >
+                <div className="w-5 h-5 rounded-full bg-[#e0f2fe] flex items-center justify-center group-hover:bg-[#bae6fd] transition-colors">
+                  <IconPlus className="w-3 h-3 text-[#0975d7]" stroke={2.5} />
+                </div>
+                <span className="group-hover:underline">Attach a roleplay</span>
               </button>
             )}
           </div>
@@ -201,6 +244,93 @@ export function WorkflowDetailScreen({
           </button>
         </div>
       </div>
+
+      {/* Attach Roleplay Modal */}
+      {showAttachModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-[500px] max-h-[600px] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e5ea]">
+              <h2 className="text-lg font-semibold text-[#2b2b40]">Attach roleplay</h2>
+              <button 
+                onClick={() => setShowAttachModal(false)}
+                className="p-1 hover:bg-[#f5f5f7] rounded transition-colors"
+              >
+                <IconX className="w-5 h-5 text-[#6b697b]" stroke={2} />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="px-6 py-4 border-b border-[#e5e5ea]">
+              <div className="relative">
+                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8d8ba7]" stroke={2} />
+                <input
+                  type="text"
+                  placeholder="Search roleplays..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-[#e5e5ea] rounded-md text-sm focus:outline-none focus:border-[#0975d7]"
+                />
+              </div>
+            </div>
+
+            {/* Create New Option */}
+            <button
+              onClick={() => {
+                setShowAttachModal(false);
+                onCreateNewRoleplay?.(workflowId, workflowName);
+              }}
+              className="mx-6 mt-4 flex items-center gap-3 p-3 border-2 border-dashed border-[#0975d7] rounded-lg hover:bg-[#f0f7ff] transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#e0f2fe] flex items-center justify-center">
+                <IconPlus className="w-5 h-5 text-[#0975d7]" stroke={2} />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-[#0975d7]">Create new roleplay</p>
+                <p className="text-xs text-[#8d8ba7]">Start from scratch with the scenario builder</p>
+              </div>
+            </button>
+
+            {/* Divider */}
+            <div className="px-6 py-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-[#e5e5ea]" />
+                <span className="text-xs text-[#8d8ba7]">or select from drafts</span>
+                <div className="flex-1 h-px bg-[#e5e5ea]" />
+              </div>
+            </div>
+
+            {/* Draft Roleplays List */}
+            <div className="flex-1 overflow-auto px-6 pb-4">
+              <div className="space-y-2">
+                {filteredRoleplays.length > 0 ? (
+                  filteredRoleplays.map((roleplay) => (
+                    <button
+                      key={roleplay.id}
+                      onClick={() => handleAttachRoleplay(roleplay)}
+                      className="w-full flex items-center gap-3 p-3 border border-[#e5e5ea] rounded-lg hover:border-[#0975d7] hover:bg-[#f9fbfd] transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-[#f0f0f5] flex items-center justify-center">
+                        <IconUsers className="w-5 h-5 text-[#6b697b]" stroke={2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#2b2b40] truncate">{roleplay.name}</p>
+                        <p className="text-xs text-[#8d8ba7]">
+                          By {roleplay.createdBy} • {roleplay.createdAt}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-sm text-[#8d8ba7]">
+                    No roleplays found matching "{searchQuery}"
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

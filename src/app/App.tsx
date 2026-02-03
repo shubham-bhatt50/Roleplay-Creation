@@ -104,6 +104,40 @@ export default function App() {
     setCurrentScreen("scenarioDetail");
   };
 
+  const handleCreateRoleplayFromWorkflow = (workflowId: string, workflowName: string) => {
+    // Store the workflow info so we can attach it after creating the roleplay
+    setAttachedWorkflow({ id: workflowId, name: workflowName });
+    setCurrentScreen("roleplay");
+  };
+
+  const handleAttachRoleplayToWorkflow = (roleplayId: string, roleplayName: string) => {
+    // Update the current workflow with the attached roleplay
+    if (currentWorkflow) {
+      setCurrentWorkflow({
+        ...currentWorkflow,
+        attachedRoleplay: { id: roleplayId, name: roleplayName }
+      });
+      // Also add to the attachedRoleplays list
+      setAttachedRoleplays((prev) => {
+        if (prev.some((r) => r.workflowId === currentWorkflow.id)) {
+          return prev.map((r) => 
+            r.workflowId === currentWorkflow.id 
+              ? { ...r, scenarioTitle: roleplayName }
+              : r
+          );
+        }
+        return [
+          ...prev,
+          {
+            workflowId: currentWorkflow.id,
+            workflowName: currentWorkflow.name,
+            scenarioTitle: roleplayName,
+          },
+        ];
+      });
+    }
+  };
+
   return (
     <div className="h-screen w-screen flex flex-col bg-[#fcfcfd] overflow-hidden">
       <div className="flex-1 flex overflow-hidden relative">
@@ -169,6 +203,8 @@ export default function App() {
               workflowName={currentWorkflow.name}
               attachedRoleplay={currentWorkflow.attachedRoleplay}
               onNavigateToRoleplay={handleNavigateFromWorkflowToRoleplay}
+              onCreateNewRoleplay={handleCreateRoleplayFromWorkflow}
+              onAttachRoleplay={handleAttachRoleplayToWorkflow}
             />
           )}
           {currentScreen === "simulation" && (
