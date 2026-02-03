@@ -622,7 +622,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
           )}
           <span className={displayMode === "tags" 
             ? "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]"
-            : "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#4b5563]"
+            : "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]"
           }>
             {value}
           </span>
@@ -859,7 +859,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
         >
           <span className={displayMode === "tags"
             ? "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]"
-            : "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#4b5563]"
+            : "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]"
           }>
             {value}
           </span>
