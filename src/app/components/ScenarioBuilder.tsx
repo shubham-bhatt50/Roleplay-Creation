@@ -832,7 +832,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             setCustomInputField(null);
             setCustomInputValue("");
           }}
-          className="inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
+          className="group inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
         >
           <span className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]">
             {value}
@@ -843,7 +843,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                 e.stopPropagation();
                 onRemove();
               }}
-              className="inline-flex items-center justify-center size-[16px] rounded-full bg-[#fee2e2] hover:bg-[#fecaca] text-[#dc2626] transition-all ml-[2px]"
+              className="inline-flex items-center justify-center size-[16px] rounded-full bg-[#f3f4f6] hover:bg-[#e5e7eb] text-[#6b7280] hover:text-[#4b5563] transition-all ml-[2px] opacity-0 group-hover:opacity-100"
               title="Remove evaluation parameter"
             >
               <IconX className="size-[10px]" stroke={2} />
