@@ -172,12 +172,6 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
 
   // Display modes for cycling
   const displayModes: Array<"tags" | "underline" | "interview" | "story"> = ["tags", "underline", "interview", "story"];
-  const displayModeNames = {
-    tags: "Tags",
-    underline: "Underline", 
-    interview: "Interview",
-    story: "Story"
-  };
 
   // Interview mode steps configuration
   const interviewSteps = [
@@ -1227,14 +1221,11 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                 }}
                 title="Click to switch mode (⌘+Shift+M)"
               >
-                <span className="font-['Inter:Medium',sans-serif] font-medium text-[11px] text-[#64748b] uppercase tracking-wide">
-                  {displayModeNames[displayMode]}
-                </span>
-                <div className="flex gap-[3px]">
+                <div className="flex gap-[4px]">
                   {displayModes.map((mode) => (
                     <div 
                       key={mode}
-                      className={`w-[6px] h-[6px] rounded-full transition-colors ${
+                      className={`w-[8px] h-[8px] rounded-full transition-colors ${
                         mode === displayMode ? "bg-[#0975d7]" : "bg-[#cbd5e1]"
                       }`}
                     />
