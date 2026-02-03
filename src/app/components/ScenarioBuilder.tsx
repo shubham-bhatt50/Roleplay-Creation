@@ -165,17 +165,31 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
   const [evaluationCriteria, setEvaluationCriteria] = useState<string[]>(["Empathy", "De-escalation", "Policy adherence"]);
   const [dropdownView, setDropdownView] = useState<"main" | "templates">("main");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [displayMode, setDisplayMode] = useState<"tags" | "underline" | "minimal" | "code">("tags");
+  const [displayMode, setDisplayMode] = useState<"tags" | "underline" | "interview" | "story">("tags");
+  const [interviewStep, setInterviewStep] = useState(0);
+  const [activeStorySlot, setActiveStorySlot] = useState<string | null>(null);
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Display modes for cycling
-  const displayModes: Array<"tags" | "underline" | "minimal" | "code"> = ["tags", "underline", "minimal", "code"];
+  const displayModes: Array<"tags" | "underline" | "interview" | "story"> = ["tags", "underline", "interview", "story"];
   const displayModeNames = {
     tags: "Tags",
     underline: "Underline", 
-    minimal: "Minimal",
-    code: "Code"
+    interview: "Interview",
+    story: "Story"
   };
+
+  // Interview mode steps configuration
+  const interviewSteps = [
+    { field: "trainee", question: "Who are you training?", hint: "Select the role or team that will be practicing this scenario" },
+    { field: "customerName", question: "Who is the customer?", hint: "Choose a customer persona for this roleplay" },
+    { field: "emotion", question: "How are they feeling?", hint: "Select the customer's emotional state" },
+    { field: "scenario", question: "What's the situation?", hint: "Describe why the customer is reaching out" },
+    { field: "objective", question: "What should the learner achieve?", hint: "Define the learning goal for this scenario" },
+    { field: "criteria", question: "How will you evaluate?", hint: "Select the criteria to assess performance" },
+    { field: "modality", question: "What format?", hint: "Choose the communication channel" },
+    { field: "difficulty", question: "How challenging?", hint: "Set the difficulty level" },
+  ];
 
   // Keyboard shortcut for toggling display mode (Cmd/Ctrl + Shift + M)
   useEffect(() => {
@@ -591,35 +605,8 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
     const customerPersona = isCustomerFieldValue ? getCustomerPersona(value) : null;
     const ModalityIcon = isModalityField ? getModalityIcon(value) : null;
 
-    const getModeClasses = () => {
-      switch (displayMode) {
-        case "tags":
-          return "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
-        case "underline":
-          return "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
-        case "minimal":
-          return "inline-flex items-center gap-[4px] px-[4px] py-[1px] bg-[#f8fafc] hover:bg-[#f1f5f9] rounded-[4px] transition-all";
-        case "code":
-          return "inline-flex items-center gap-[3px] px-[6px] py-[2px] bg-[#1e293b] hover:bg-[#334155] rounded-[4px] transition-all font-mono";
-        default:
-          return "";
-      }
-    };
-
-    const getTextClasses = () => {
-      switch (displayMode) {
-        case "tags":
-          return "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]";
-        case "underline":
-          return "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]";
-        case "minimal":
-          return "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[14px] text-nowrap text-[#475569]";
-        case "code":
-          return "font-['JetBrains_Mono',monospace] font-medium leading-[20px] text-[13px] text-nowrap text-[#22d3ee]";
-        default:
-          return "";
-      }
-    };
+    const tagModeClasses = "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
+    const underlineModeClasses = "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
 
     return (
       <div className="relative inline-block" ref={dropdownRef}>
@@ -634,7 +621,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             setCustomInputField(null);
             setCustomInputValue("");
           }}
-          className={getModeClasses()}
+          className={displayMode === "tags" ? tagModeClasses : underlineModeClasses}
         >
           {displayMode === "tags" && isDifficultyField && (
             <DifficultyBars difficulty={value} size={14} />
@@ -660,15 +647,12 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
               </div>
             )
           )}
-          {displayMode === "code" && (
-            <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#94a3b8]">"</span>
-          )}
-          <span className={getTextClasses()}>
+          <span className={displayMode === "tags" 
+            ? "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]"
+            : "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]"
+          }>
             {value}
           </span>
-          {displayMode === "code" && (
-            <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#94a3b8]">"</span>
-          )}
         </button>
         {openDropdown === field && (
           <div className="absolute left-0 top-[calc(100%+4px)] bg-white rounded-[8px] shadow-[0px_4px_12px_rgba(0,0,0,0.15)] py-[4px] min-w-[200px] max-w-[400px] z-50">
@@ -686,7 +670,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                 {/* Templates View for Customer Field */}
                 {isCustomerFieldDropdown && dropdownView === "templates" ? (
                   <>
-                    <button
+                  <button
                       className="flex items-center gap-[8px] px-[12px] py-[8px] w-full hover:bg-[#f5f5f5] transition-colors text-left border-b border-[#f3f4f6]"
                       onClick={() => setDropdownView("main")}
                     >
@@ -882,35 +866,8 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
       }
     }, [openDropdown, fieldKey]);
 
-    const getModeClasses = () => {
-      switch (displayMode) {
-        case "tags":
-          return "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
-        case "underline":
-          return "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
-        case "minimal":
-          return "inline-flex items-center gap-[4px] px-[4px] py-[1px] bg-[#f8fafc] hover:bg-[#f1f5f9] rounded-[4px] transition-all";
-        case "code":
-          return "inline-flex items-center gap-[3px] px-[6px] py-[2px] bg-[#1e293b] hover:bg-[#334155] rounded-[4px] transition-all font-mono";
-        default:
-          return "";
-      }
-    };
-
-    const getTextClasses = () => {
-      switch (displayMode) {
-        case "tags":
-          return "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]";
-        case "underline":
-          return "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]";
-        case "minimal":
-          return "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[14px] text-nowrap text-[#475569]";
-        case "code":
-          return "font-['JetBrains_Mono',monospace] font-medium leading-[20px] text-[13px] text-nowrap text-[#a5f3fc]";
-        default:
-          return "";
-      }
-    };
+    const tagModeClasses = "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
+    const underlineModeClasses = "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
 
     return (
       <div className="relative inline-block" ref={dropdownRef}>
@@ -925,17 +882,14 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             setCustomInputField(null);
             setCustomInputValue("");
           }}
-          className={getModeClasses()}
+          className={displayMode === "tags" ? tagModeClasses : underlineModeClasses}
         >
-          {displayMode === "code" && (
-            <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#94a3b8]">"</span>
-          )}
-          <span className={getTextClasses()}>
+          <span className={displayMode === "tags"
+            ? "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]"
+            : "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]"
+          }>
             {value}
           </span>
-          {displayMode === "code" && (
-            <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#94a3b8]">"</span>
-          )}
           {displayMode === "tags" && showRemove && onRemove && (
             <button
               onClick={(e) => {
@@ -1034,6 +988,36 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
       </div>
     );
   };
+
+  // Story Slot component for Story mode
+  const StorySlot = ({ 
+    field, 
+    value, 
+    isActive, 
+    onClick 
+  }: { 
+    field: string; 
+    value: string; 
+    isActive: boolean; 
+    onClick: () => void;
+  }) => (
+    <button
+      onClick={onClick}
+      className={`inline-block px-[4px] py-[2px] mx-[2px] transition-all cursor-pointer ${
+        isActive
+          ? "bg-[#fef08a] border-b-2 border-[#eab308]"
+          : value
+            ? "bg-[#fef9c3] border-b-2 border-dashed border-[#ca8a04] hover:bg-[#fef08a]"
+            : "bg-[#fef3c7] border-b-2 border-dashed border-[#d97706]"
+      }`}
+    >
+      <span className={`font-['Georgia',serif] text-[20px] ${
+        value ? "text-[#713f12]" : "text-[#92400e] italic"
+      }`}>
+        {value || "________"}
+      </span>
+    </button>
+  );
 
   useEffect(() => {
     const currentRef = dropdownRefs.current[openDropdown || ""];
@@ -1212,25 +1196,25 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
           <div className="flex flex-col gap-[12px] items-start relative w-[590px] min-h-[500px]">
             {/* Tab Group - Left aligned above content */}
             <div className="flex gap-[8px] items-center justify-between w-full">
-              <div className="flex gap-[8px] items-center bg-white rounded-[8px] p-[4px] border border-[#ececf3] w-fit">
-                <motion.button
-                  onClick={() => {}}
-                  className="px-[16px] py-[8px] rounded-[6px] font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] text-[#3d3c52] bg-[#f0f0f0] transition-colors"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Scenario builder
-                </motion.button>
-                <motion.button
-                  onClick={onSwitchToPrompt}
-                  className="px-[16px] py-[8px] rounded-[6px] font-['Inter:Medium',sans-serif] font-medium text-[14px] text-[#6b697b] hover:text-[#3d3c52] hover:bg-[#f5f5f5] transition-colors"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Prompt
-                </motion.button>
-              </div>
-              
+            <div className="flex gap-[8px] items-center bg-white rounded-[8px] p-[4px] border border-[#ececf3] w-fit">
+              <motion.button
+                onClick={() => {}}
+                className="px-[16px] py-[8px] rounded-[6px] font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] text-[#3d3c52] bg-[#f0f0f0] transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Scenario builder
+              </motion.button>
+              <motion.button
+                onClick={onSwitchToPrompt}
+                className="px-[16px] py-[8px] rounded-[6px] font-['Inter:Medium',sans-serif] font-medium text-[14px] text-[#6b697b] hover:text-[#3d3c52] hover:bg-[#f5f5f5] transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Prompt
+              </motion.button>
+            </div>
+
               {/* Mode Indicator */}
               <div 
                 className="flex items-center gap-[6px] px-[10px] py-[5px] rounded-[6px] bg-[#f8fafc] border border-[#e2e8f0] cursor-pointer hover:bg-[#f1f5f9] transition-colors"
@@ -1259,7 +1243,319 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
               </div>
             </div>
 
-            {/* Scenario Details */}
+            {/* INTERVIEW MODE */}
+            {displayMode === "interview" && (
+              <motion.div 
+                className="flex flex-col w-full mt-[24px]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Progress bar */}
+                <div className="flex items-center gap-[12px] mb-[40px]">
+                  <div className="flex-1 h-[4px] bg-[#e5e7eb] rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-[#0975d7] rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((interviewStep + 1) / interviewSteps.length) * 100}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                  <span className="font-['Inter:Medium',sans-serif] font-medium text-[13px] text-[#6b7280]">
+                    {interviewStep + 1} of {interviewSteps.length}
+                  </span>
+                </div>
+
+                {/* Current Question */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={interviewStep}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex flex-col gap-[16px]"
+                  >
+                    <h2 className="font-['Inter:SemiBold',sans-serif] font-semibold text-[28px] text-[#1f2937] leading-[36px]">
+                      {interviewSteps[interviewStep].question}
+                    </h2>
+                    <p className="font-['Inter:Regular',sans-serif] text-[15px] text-[#6b7280] leading-[24px]">
+                      {interviewSteps[interviewStep].hint}
+                    </p>
+
+                    {/* Options Grid */}
+                    <div className="grid grid-cols-2 gap-[12px] mt-[24px]">
+                      {interviewSteps[interviewStep].field === "criteria" ? (
+                        dropdownOptions.criteria.filter(opt => opt !== "Add custom...").map((option) => (
+                          <motion.button
+                            key={option}
+                            onClick={() => {
+                              if (!evaluationCriteria.includes(option)) {
+                                if (evaluationCriteria.length < 5) {
+                                  setEvaluationCriteria([...evaluationCriteria, option]);
+                                }
+                              } else {
+                                if (evaluationCriteria.length > 2) {
+                                  setEvaluationCriteria(evaluationCriteria.filter(c => c !== option));
+                                }
+                              }
+                            }}
+                            className={`p-[16px] rounded-[12px] border-2 transition-all text-left ${
+                              evaluationCriteria.includes(option)
+                                ? "border-[#0975d7] bg-[#eff6ff]"
+                                : "border-[#e5e7eb] bg-white hover:border-[#9ca3af]"
+                            }`}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <span className={`font-['Inter:Medium',sans-serif] font-medium text-[15px] ${
+                              evaluationCriteria.includes(option) ? "text-[#0975d7]" : "text-[#374151]"
+                            }`}>
+                              {option}
+                            </span>
+                          </motion.button>
+                        ))
+                      ) : (
+                        (dropdownOptions[interviewSteps[interviewStep].field as keyof typeof dropdownOptions] as string[] || [])
+                          .filter((opt: string) => opt !== "Add custom..." && !opt.startsWith("template:"))
+                          .map((option: string) => {
+                            const isSelected = values[interviewSteps[interviewStep].field as keyof typeof values] === option;
+                            return (
+                              <motion.button
+                                key={option}
+                                onClick={() => handleSelect(interviewSteps[interviewStep].field, option)}
+                                className={`p-[16px] rounded-[12px] border-2 transition-all text-left ${
+                                  isSelected
+                                    ? "border-[#0975d7] bg-[#eff6ff]"
+                                    : "border-[#e5e7eb] bg-white hover:border-[#9ca3af]"
+                                }`}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                <span className={`font-['Inter:Medium',sans-serif] font-medium text-[15px] ${
+                                  isSelected ? "text-[#0975d7]" : "text-[#374151]"
+                                }`}>
+                                  {option}
+                                </span>
+                              </motion.button>
+                            );
+                          })
+                      )}
+                    </div>
+
+                    {/* Selected criteria display (for criteria step) */}
+                    {interviewSteps[interviewStep].field === "criteria" && (
+                      <div className="mt-[16px] flex flex-wrap gap-[8px]">
+                        <span className="font-['Inter:Regular',sans-serif] text-[13px] text-[#6b7280]">Selected:</span>
+                        {evaluationCriteria.map((c) => (
+                          <span key={c} className="px-[10px] py-[4px] bg-[#0975d7] text-white rounded-full text-[13px] font-['Inter:Medium',sans-serif] font-medium">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Navigation */}
+                <div className="flex justify-between items-center mt-[48px]">
+                  <button
+                    onClick={() => setInterviewStep(Math.max(0, interviewStep - 1))}
+                    disabled={interviewStep === 0}
+                    className="flex items-center gap-[8px] px-[16px] py-[10px] text-[#6b7280] hover:text-[#374151] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <IconArrowLeft className="size-[18px]" stroke={2} />
+                    <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Back</span>
+                  </button>
+
+                  {interviewStep < interviewSteps.length - 1 ? (
+                    <button
+                      onClick={() => setInterviewStep(interviewStep + 1)}
+                      className="flex items-center gap-[8px] px-[20px] py-[10px] bg-[#0975d7] text-white rounded-[8px] hover:bg-[#0861b8] transition-colors"
+                    >
+                      <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Continue</span>
+                      <IconArrowRight className="size-[18px]" stroke={2} />
+                    </button>
+                  ) : (
+                    <button
+                      className="flex items-center gap-[8px] px-[20px] py-[10px] bg-[#c74900] text-white rounded-[8px] hover:bg-[#b04200] transition-colors disabled:opacity-70"
+                      onClick={() => {
+                        setIsGenerating(true);
+                        onGenerateScenario({
+                          ...values,
+                          criteria1: evaluationCriteria[0] || "",
+                          criteria2: evaluationCriteria[1] || "",
+                          criteria3: evaluationCriteria[2] || ""
+                        });
+                      }}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Generating...</span>
+                          <IconLoader2 className="size-[18px] animate-spin" stroke={2} />
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">Generate Scenario</span>
+                          <IconArrowRight className="size-[18px]" stroke={2} />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* STORY MODE */}
+            {displayMode === "story" && (
+              <motion.div 
+                className="flex flex-col w-full mt-[24px]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Story narrative with fillable slots */}
+                <div className="bg-[#fefce8] border border-[#fef08a] rounded-[16px] p-[32px] relative">
+                  <div className="absolute top-[16px] right-[16px] px-[8px] py-[4px] bg-[#fef9c3] rounded-[6px]">
+                    <span className="font-['Inter:Medium',sans-serif] font-medium text-[11px] text-[#a16207] uppercase tracking-wide">
+                      Fill in the blanks
+                    </span>
+                  </div>
+
+                  <p className="font-['Georgia',serif] text-[20px] leading-[36px] text-[#44403c]">
+                    <span>You are training </span>
+                    <StorySlot 
+                      field="trainee" 
+                      value={values.trainee}
+                      isActive={activeStorySlot === "trainee"}
+                      onClick={() => setActiveStorySlot(activeStorySlot === "trainee" ? null : "trainee")}
+                    />
+                    <span> to handle a customer named </span>
+                    <StorySlot 
+                      field="customerName" 
+                      value={values.customerName}
+                      isActive={activeStorySlot === "customerName"}
+                      onClick={() => setActiveStorySlot(activeStorySlot === "customerName" ? null : "customerName")}
+                    />
+                    <span> who is feeling </span>
+                    <StorySlot 
+                      field="emotion" 
+                      value={values.emotion}
+                      isActive={activeStorySlot === "emotion"}
+                      onClick={() => setActiveStorySlot(activeStorySlot === "emotion" ? null : "emotion")}
+                    />
+                    <span> because </span>
+                    <StorySlot 
+                      field="scenario" 
+                      value={values.scenario}
+                      isActive={activeStorySlot === "scenario"}
+                      onClick={() => setActiveStorySlot(activeStorySlot === "scenario" ? null : "scenario")}
+                    />
+                    <span>.</span>
+                  </p>
+
+                  <p className="font-['Georgia',serif] text-[20px] leading-[36px] text-[#44403c] mt-[24px]">
+                    <span>The goal is to </span>
+                    <StorySlot 
+                      field="objective" 
+                      value={values.objective}
+                      isActive={activeStorySlot === "objective"}
+                      onClick={() => setActiveStorySlot(activeStorySlot === "objective" ? null : "objective")}
+                    />
+                    <span>. Success will be measured by </span>
+                    <span className="font-semibold text-[#166534]">{evaluationCriteria.join(", ")}</span>
+                    <span>.</span>
+                  </p>
+
+                  <p className="font-['Georgia',serif] text-[20px] leading-[36px] text-[#44403c] mt-[24px]">
+                    <span>This will be a </span>
+                    <StorySlot 
+                      field="modality" 
+                      value={values.modality}
+                      isActive={activeStorySlot === "modality"}
+                      onClick={() => setActiveStorySlot(activeStorySlot === "modality" ? null : "modality")}
+                    />
+                    <span> conversation with </span>
+                    <StorySlot 
+                      field="difficulty" 
+                      value={values.difficulty}
+                      isActive={activeStorySlot === "difficulty"}
+                      onClick={() => setActiveStorySlot(activeStorySlot === "difficulty" ? null : "difficulty")}
+                    />
+                    <span> difficulty.</span>
+                  </p>
+                </div>
+
+                {/* Options panel that appears when a slot is active */}
+                <AnimatePresence>
+                  {activeStorySlot && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="mt-[24px] p-[20px] bg-white border border-[#e5e7eb] rounded-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+                    >
+                      <p className="font-['Inter:Medium',sans-serif] font-medium text-[13px] text-[#6b7280] mb-[12px]">
+                        Select an option:
+                      </p>
+                      <div className="flex flex-wrap gap-[8px]">
+                        {(dropdownOptions[activeStorySlot as keyof typeof dropdownOptions] as string[] || [])
+                          .filter((opt: string) => opt !== "Add custom..." && !opt.startsWith("template:"))
+                          .map((option: string) => (
+                            <button
+                              key={option}
+                              onClick={() => {
+                                handleSelect(activeStorySlot, option);
+                                setActiveStorySlot(null);
+                              }}
+                              className={`px-[14px] py-[8px] rounded-[8px] border transition-all ${
+                                values[activeStorySlot as keyof typeof values] === option
+                                  ? "border-[#0975d7] bg-[#eff6ff] text-[#0975d7]"
+                                  : "border-[#e5e7eb] bg-[#f9fafb] text-[#374151] hover:border-[#9ca3af]"
+                              }`}
+                            >
+                              <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px]">
+                                {option}
+                              </span>
+                            </button>
+                          ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Generate Button */}
+                <button
+                  className="bg-[#c74900] flex gap-[8px] items-center justify-center px-[20px] py-[12px] rounded-[8px] hover:bg-[#b04200] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-[32px] w-fit"
+                  onClick={() => {
+                    setIsGenerating(true);
+                    onGenerateScenario({
+                      ...values,
+                      criteria1: evaluationCriteria[0] || "",
+                      criteria2: evaluationCriteria[1] || "",
+                      criteria3: evaluationCriteria[2] || ""
+                    });
+                  }}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <span className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[14px] text-white">Generating scenario</span>
+                      <IconLoader2 className="size-[18px] text-white animate-spin" stroke={1.5} />
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[14px] text-white">Generate detailed scenario</span>
+                      <IconArrowRight className="size-[18px] text-white" stroke={1.5} />
+                    </>
+                  )}
+                </button>
+              </motion.div>
+            )}
+
+            {/* TAGS & UNDERLINE MODES (Original) */}
+            {(displayMode === "tags" || displayMode === "underline") && (
             <motion.div 
               className="flex flex-col w-full mt-[24px]"
               initial={{ opacity: 0, y: 8 }}
@@ -1294,38 +1590,35 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
               </p>
 
               {/* Section 3: Evaluation */}
-              <div className="flex flex-wrap items-center gap-x-[6px] gap-y-[8px] mt-[12px]">
-                <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">Evaluate on</span>
-                {evaluationCriteria.map((criterion, index) => (
-                  <React.Fragment key={index}>
-                    {/* Separator logic based on display mode */}
-                    {index > 0 && displayMode === "tags" && index === evaluationCriteria.length - 1 && (
-                      <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">&</span>
-                    )}
-                    {index > 0 && (displayMode === "underline" || displayMode === "minimal") && (
-                      <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">,</span>
-                    )}
-                    {index > 0 && displayMode === "code" && (
-                      <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#64748b]">,</span>
-                    )}
-                    <CriteriaDropdown 
-                      index={index} 
-                      value={criterion}
-                      showRemove={evaluationCriteria.length > 2}
-                      onRemove={() => handleRemoveCriteria(index)}
-                    />
-                  </React.Fragment>
-                ))}
-                {(displayMode === "tags" || displayMode === "minimal") && (
-                  <button
-                    onClick={handleAddCriteria}
-                    className="inline-flex items-center justify-center size-[28px] rounded-full bg-[#f0f9ff] hover:bg-[#e0f2fe] border border-[#bae6fd] text-[#0369a1] transition-all"
-                    title="Add evaluation parameter"
-                  >
-                    <IconPlus className="size-[14px]" stroke={2} />
-                  </button>
-                )}
-              </div>
+                <div className="flex flex-wrap items-center gap-x-[6px] gap-y-[8px] mt-[12px]">
+                  <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">Evaluate on</span>
+                  {evaluationCriteria.map((criterion, index) => (
+                    <React.Fragment key={index}>
+                      {/* Separator logic based on display mode */}
+                      {index > 0 && displayMode === "tags" && index === evaluationCriteria.length - 1 && (
+                        <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">&</span>
+                      )}
+                      {index > 0 && displayMode === "underline" && (
+                        <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">,</span>
+                      )}
+                      <CriteriaDropdown 
+                        index={index} 
+                        value={criterion}
+                        showRemove={evaluationCriteria.length > 2}
+                        onRemove={() => handleRemoveCriteria(index)}
+                      />
+                    </React.Fragment>
+                  ))}
+                  {displayMode === "tags" && (
+                    <button
+                      onClick={handleAddCriteria}
+                      className="inline-flex items-center justify-center size-[28px] rounded-full bg-[#f0f9ff] hover:bg-[#e0f2fe] border border-[#bae6fd] text-[#0369a1] transition-all"
+                      title="Add evaluation parameter"
+                    >
+                      <IconPlus className="size-[14px]" stroke={2} />
+                    </button>
+                  )}
+                </div>
 
               {/* Fading Divider */}
               <div className="h-[1px] mt-[20px] mb-[16px] w-[60%] bg-gradient-to-r from-[#e5e7eb] via-[#e5e7eb]/30 to-transparent" />
@@ -1343,12 +1636,12 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                 className="bg-[#c74900] flex gap-[8px] items-center justify-center px-[20px] py-[12px] rounded-[8px] hover:bg-[#b04200] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-[28px] w-fit"
                 onClick={() => {
                   setIsGenerating(true);
-                  onGenerateScenario({
-                    ...values,
-                    criteria1: evaluationCriteria[0] || "",
-                    criteria2: evaluationCriteria[1] || "",
-                    criteria3: evaluationCriteria[2] || ""
-                  });
+                    onGenerateScenario({
+                      ...values,
+                      criteria1: evaluationCriteria[0] || "",
+                      criteria2: evaluationCriteria[1] || "",
+                      criteria3: evaluationCriteria[2] || ""
+                    });
                 }}
                 disabled={isGenerating}
               >
@@ -1365,6 +1658,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                 )}
               </button>
             </motion.div>
+            )}
           </div>
         </div>
       </div>
