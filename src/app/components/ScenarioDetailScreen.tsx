@@ -400,8 +400,24 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
   } | null>(null);
   const [exitConditionEditValue, setExitConditionEditValue] = useState("");
 
-  const getExitConditionIcon = (icon: ExitCondition["icon"]) => {
-    switch (icon) {
+  // Automatically determine icon based on trigger text
+  const getIconForTrigger = (trigger: string): ExitCondition["icon"] => {
+    const lower = trigger.toLowerCase();
+    if (lower.includes("resolution") || lower.includes("resolve") || lower.includes("success")) {
+      return "resolution";
+    }
+    if (lower.includes("time") || lower.includes("minute") || lower.includes("timeout")) {
+      return "time";
+    }
+    if (lower.includes("escalate") || lower.includes("supervisor") || lower.includes("manager")) {
+      return "escalate";
+    }
+    return "end";
+  };
+
+  const getExitConditionIcon = (trigger: string) => {
+    const iconType = getIconForTrigger(trigger);
+    switch (iconType) {
       case "resolution":
         return IconCheck;
       case "time":
@@ -415,21 +431,15 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
     }
   };
 
-  const getExitConditionColor = (icon: ExitCondition["icon"]) => {
-    // Minimalistic - all conditions use the same subtle styling
-    return { iconBg: "#f5f5f7", iconColor: "#6b697b" };
-  };
-
   const addExitCondition = () => {
     const newId = String(Date.now());
-    const icons: ExitCondition["icon"][] = ["resolution", "time", "escalate", "end"];
     const newCondition: ExitCondition = {
       id: newId,
       trigger: "New condition",
       action: "End scenario",
-      icon: icons[exitConditions.length % icons.length],
+      icon: "end",
     };
-    setExitConditions([newCondition, ...exitConditions]);
+    setExitConditions([...exitConditions, newCondition]);
   };
 
   const deleteExitCondition = (id: string) => {
@@ -441,20 +451,6 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
       exitConditions.map((c) =>
         c.id === id ? { ...c, [field]: value } : c
       )
-    );
-  };
-
-  const cycleExitConditionIcon = (id: string) => {
-    const icons: ExitCondition["icon"][] = ["resolution", "time", "escalate", "end"];
-    setExitConditions(
-      exitConditions.map((c) => {
-        if (c.id === id) {
-          const currentIndex = icons.indexOf(c.icon);
-          const nextIndex = (currentIndex + 1) % icons.length;
-          return { ...c, icon: icons[nextIndex] };
-        }
-        return c;
-      })
     );
   };
   
@@ -2149,7 +2145,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                 <div className="flex-1 min-h-0 overflow-y-auto py-6 px-6">
                   <div className="max-w-4xl mx-auto space-y-3">
                     {exitConditions.map((condition, index) => {
-                      const Icon = getExitConditionIcon(condition.icon);
+                      const Icon = getExitConditionIcon(condition.trigger);
                       const isEditingTrigger = editingExitCondition?.id === condition.id && editingExitCondition?.field === "trigger";
                       const isEditingAction = editingExitCondition?.id === condition.id && editingExitCondition?.field === "action";
 
@@ -2162,14 +2158,10 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                               <span className="text-xs font-medium text-[#6b697b]">{index + 1}</span>
                             </div>
 
-                            {/* Icon button */}
-                            <button
-                              onClick={() => cycleExitConditionIcon(condition.id)}
-                              className="shrink-0 w-8 h-8 rounded-lg bg-white border border-[#e5e5ea] flex items-center justify-center hover:border-[#0975d7] hover:bg-[#f0f7ff] transition-colors"
-                              title="Click to change icon"
-                            >
+                            {/* Icon - auto-assigned based on trigger text */}
+                            <div className="shrink-0 w-8 h-8 rounded-lg bg-white border border-[#e5e5ea] flex items-center justify-center">
                               <Icon className="w-4 h-4 text-[#6b697b]" stroke={2} />
-                            </button>
+                            </div>
 
                             {/* Condition text */}
                             <div className="flex-1 flex items-center gap-2 min-w-0">
@@ -2289,7 +2281,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                   {/* Helper text */}
                   {exitConditions.length > 0 && (
                     <p className="mt-6 text-center text-xs text-[#b5b5b5]">
-                      Click text to edit • Click icon to change type
+                      Click text to edit
                     </p>
                   )}
                 </div>
