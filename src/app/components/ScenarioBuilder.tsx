@@ -787,10 +787,14 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
   // Criteria Dropdown Component for evaluation parameters
   const CriteriaDropdown = ({ 
     index, 
-    value 
+    value,
+    showRemove,
+    onRemove
   }: { 
     index: number; 
     value: string;
+    showRemove?: boolean;
+    onRemove?: () => void;
   }) => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const fieldKey = `criteria_${index}`;
@@ -833,6 +837,18 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
           <span className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]">
             {value}
           </span>
+          {showRemove && onRemove && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="inline-flex items-center justify-center size-[16px] rounded-full bg-[#fee2e2] hover:bg-[#fecaca] text-[#dc2626] transition-all ml-[2px]"
+              title="Remove evaluation parameter"
+            >
+              <IconX className="size-[10px]" stroke={2} />
+            </button>
+          )}
         </button>
         {openDropdown === fieldKey && (
           <div className="absolute left-0 top-[calc(100%+4px)] bg-white rounded-[8px] shadow-[0px_4px_12px_rgba(0,0,0,0.15)] py-[4px] min-w-[200px] max-w-[300px] z-50 max-h-[300px] overflow-y-auto">
@@ -1157,21 +1173,12 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                     {index > 0 && index === evaluationCriteria.length - 1 && (
                       <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">&</span>
                     )}
-                    <div className="inline-flex items-center gap-[4px]">
-                      <CriteriaDropdown index={index} value={criterion} />
-                      {evaluationCriteria.length > 2 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveCriteria(index);
-                          }}
-                          className="inline-flex items-center justify-center size-[20px] rounded-full bg-[#fee2e2] hover:bg-[#fecaca] border border-[#fca5a5] text-[#dc2626] transition-all"
-                          title="Remove evaluation parameter"
-                        >
-                          <IconX className="size-[12px]" stroke={2} />
-                        </button>
-                      )}
-                    </div>
+                    <CriteriaDropdown 
+                      index={index} 
+                      value={criterion}
+                      showRemove={evaluationCriteria.length > 2}
+                      onRemove={() => handleRemoveCriteria(index)}
+                    />
                   </React.Fragment>
                 ))}
                 <button
