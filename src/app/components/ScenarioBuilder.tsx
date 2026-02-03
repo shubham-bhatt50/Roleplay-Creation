@@ -1025,13 +1025,6 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
                 </div>
               ))}
             </div>
-
-            {/* Sidebar Footer */}
-            <div className="px-[20px] py-[16px] border-t border-[#ececf3] bg-[#f9fafb]">
-              <button className="w-full py-[10px] px-[16px] rounded-[8px] bg-[#0975d7] hover:bg-[#0861b8] text-white font-['Inter:Medium',sans-serif] font-medium text-[14px] transition-colors">
-                Create new roleplay
-              </button>
-            </div>
           </motion.div>
         </>
       )}
