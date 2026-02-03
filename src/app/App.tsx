@@ -4,11 +4,12 @@ import { Dashboard } from "@/app/components/Dashboard";
 import { ScenarioBuilder } from "@/app/components/ScenarioBuilder";
 import { PromptScreen } from "@/app/components/PromptScreen";
 import { ScenarioDetailScreen } from "@/app/components/ScenarioDetailScreen";
+import { WorkflowDetailScreen } from "@/app/components/WorkflowDetailScreen";
 import { Sidebar } from "@/app/components/Sidebar";
 import { SettingsSidebar } from "@/app/components/SettingsSidebar";
 import { Competencies } from "@/app/components/Competencies";
 
-type Screen = "dashboard" | "roleplay" | "prompt" | "simulation" | "scenarioDetail" | "competencies";
+type Screen = "dashboard" | "roleplay" | "prompt" | "simulation" | "scenarioDetail" | "workflowDetail" | "competencies";
 
 interface AttachedRoleplay {
   workflowId: string;
@@ -35,6 +36,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [scenarioData, setScenarioData] = useState<ScenarioData | null>(null);
   const [attachedWorkflow, setAttachedWorkflow] = useState<{ id: string; name: string } | null>(null);
+  const [currentWorkflow, setCurrentWorkflow] = useState<{ id: string; name: string; attachedRoleplay?: { id: string; name: string } } | null>(null);
 
   const handleGenerateScenario = (data: ScenarioData) => {
     setScenarioData(data);
@@ -81,6 +83,24 @@ export default function App() {
     };
     setScenarioData(defaultScenarioData);
     setAttachedWorkflow(workflow || null);
+    setCurrentScreen("scenarioDetail");
+  };
+
+  const handleNavigateToWorkflow = (workflowId: string, workflowName: string, roleplayName?: string) => {
+    setCurrentWorkflow({
+      id: workflowId,
+      name: workflowName,
+      attachedRoleplay: roleplayName ? { id: "current", name: roleplayName } : undefined
+    });
+    setCurrentScreen("workflowDetail");
+  };
+
+  const handleNavigateFromWorkflowToRoleplay = (roleplayId: string) => {
+    // Navigate back to the roleplay detail page
+    // Use the current workflow as the attached workflow
+    if (currentWorkflow) {
+      setAttachedWorkflow({ id: currentWorkflow.id, name: currentWorkflow.name });
+    }
     setCurrentScreen("scenarioDetail");
   };
 
@@ -137,6 +157,17 @@ export default function App() {
               onAttachWorkflow={handleAttachWorkflow}
               scenarioData={scenarioData}
               attachedWorkflow={attachedWorkflow}
+              onNavigateToWorkflow={handleNavigateToWorkflow}
+            />
+          )}
+          {currentScreen === "workflowDetail" && currentWorkflow && (
+            <WorkflowDetailScreen
+              key="workflowDetail"
+              onBack={() => setCurrentScreen("dashboard")}
+              workflowId={currentWorkflow.id}
+              workflowName={currentWorkflow.name}
+              attachedRoleplay={currentWorkflow.attachedRoleplay}
+              onNavigateToRoleplay={handleNavigateFromWorkflowToRoleplay}
             />
           )}
           {currentScreen === "simulation" && (

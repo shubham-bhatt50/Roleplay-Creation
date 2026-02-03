@@ -26,6 +26,7 @@ interface ScenarioDetailScreenProps {
   onAttachWorkflow?: (workflowId: string, workflowName: string) => void;
   scenarioData?: ScenarioData | null;
   attachedWorkflow?: { id: string; name: string } | null;
+  onNavigateToWorkflow?: (workflowId: string, workflowName: string, roleplayName?: string) => void;
 }
 
 type TabType = "scenario" | "persona" | "evaluation" | "exit" | "settings";
@@ -41,7 +42,7 @@ const availableWorkflows = [
   { id: "7", name: "Update payment | Billing system", type: "Workflow" },
 ];
 
-export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, attachedWorkflow }: ScenarioDetailScreenProps) {
+export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, attachedWorkflow, onNavigateToWorkflow }: ScenarioDetailScreenProps) {
   const [activeTab, setActiveTab] = useState<TabType>("scenario");
   const [activeMode, setActiveMode] = useState<"voice" | "chat" | "hybrid">("voice");
   const [showWarningDialog, setShowWarningDialog] = useState(false);
@@ -872,8 +873,8 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                 <button 
                   className="flex items-center gap-1.5 mt-1.5 text-[13px] text-[#8d8ba7] hover:text-[#6b6b80] transition-colors group"
                   onClick={() => {
-                    // Navigate to workflow
-                    console.log("Navigate to workflow:", attachedWorkflow.id);
+                    // Navigate to workflow detail page
+                    onNavigateToWorkflow?.(attachedWorkflow.id, attachedWorkflow.name, scenarioTitle);
                   }}
                 >
                   <div className="w-5 h-5 rounded-full bg-[#f0f0f5] flex items-center justify-center group-hover:bg-[#e5e5ea] transition-colors">
