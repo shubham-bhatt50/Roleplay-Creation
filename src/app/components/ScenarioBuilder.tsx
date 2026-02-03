@@ -165,7 +165,21 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
   const [evaluationCriteria, setEvaluationCriteria] = useState<string[]>(["Empathy", "De-escalation", "Policy adherence"]);
   const [dropdownView, setDropdownView] = useState<"main" | "templates">("main");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [displayMode, setDisplayMode] = useState<"tags" | "underline">("tags");
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Keyboard shortcut for toggling display mode (Cmd/Ctrl + Shift + M)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        setDisplayMode(prev => prev === "tags" ? "underline" : "tags");
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const customerPersonas: CustomerPersona[] = [
     {
@@ -564,6 +578,9 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
     const customerPersona = isCustomerFieldValue ? getCustomerPersona(value) : null;
     const ModalityIcon = isModalityField ? getModalityIcon(value) : null;
 
+    const tagModeClasses = "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
+    const underlineModeClasses = "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
+
     return (
       <div className="relative inline-block" ref={dropdownRef}>
         <button
@@ -577,18 +594,18 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             setCustomInputField(null);
             setCustomInputValue("");
           }}
-          className="inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
+          className={displayMode === "tags" ? tagModeClasses : underlineModeClasses}
         >
-          {isDifficultyField && (
+          {displayMode === "tags" && isDifficultyField && (
             <DifficultyBars difficulty={value} size={14} />
           )}
-          {isModalityField && ModalityIcon && (
+          {displayMode === "tags" && isModalityField && ModalityIcon && (
             <ModalityIcon className="size-[14px] text-[#6b7280]" stroke={1.5} />
           )}
-          {isEmotionField && EmotionIcon && (
+          {displayMode === "tags" && isEmotionField && EmotionIcon && (
             <EmotionIcon className="size-[14px]" style={{ color: emotionColor || undefined }} stroke={2} />
           )}
-          {isCustomerFieldValue && customerPersona && (
+          {displayMode === "tags" && isCustomerFieldValue && customerPersona && (
             customerPersona.avatar ? (
               <img
                 src={customerPersona.avatar}
@@ -603,7 +620,10 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
               </div>
             )
           )}
-          <span className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]">
+          <span className={displayMode === "tags" 
+            ? "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]"
+            : "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#4b5563]"
+          }>
             {value}
           </span>
         </button>
@@ -819,6 +839,9 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
       }
     }, [openDropdown, fieldKey]);
 
+    const tagModeClasses = "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
+    const underlineModeClasses = "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
+
     return (
       <div className="relative inline-block" ref={dropdownRef}>
         <button
@@ -832,12 +855,15 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             setCustomInputField(null);
             setCustomInputValue("");
           }}
-          className="inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
+          className={displayMode === "tags" ? tagModeClasses : underlineModeClasses}
         >
-          <span className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]">
+          <span className={displayMode === "tags"
+            ? "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]"
+            : "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#4b5563]"
+          }>
             {value}
           </span>
-          {showRemove && onRemove && (
+          {displayMode === "tags" && showRemove && onRemove && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -1173,6 +1199,9 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                     {index > 0 && index === evaluationCriteria.length - 1 && (
                       <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">&</span>
                     )}
+                    {index > 0 && index < evaluationCriteria.length - 1 && displayMode === "underline" && (
+                      <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">,</span>
+                    )}
                     <CriteriaDropdown 
                       index={index} 
                       value={criterion}
@@ -1181,13 +1210,15 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                     />
                   </React.Fragment>
                 ))}
-                <button
-                  onClick={handleAddCriteria}
-                  className="inline-flex items-center justify-center size-[28px] rounded-full bg-[#f0f9ff] hover:bg-[#e0f2fe] border border-[#bae6fd] text-[#0369a1] transition-all"
-                  title="Add evaluation parameter"
-                >
-                  <IconPlus className="size-[14px]" stroke={2} />
-                </button>
+                {displayMode === "tags" && (
+                  <button
+                    onClick={handleAddCriteria}
+                    className="inline-flex items-center justify-center size-[28px] rounded-full bg-[#f0f9ff] hover:bg-[#e0f2fe] border border-[#bae6fd] text-[#0369a1] transition-all"
+                    title="Add evaluation parameter"
+                  >
+                    <IconPlus className="size-[14px]" stroke={2} />
+                  </button>
+                )}
               </div>
 
               {/* Fading Divider */}
