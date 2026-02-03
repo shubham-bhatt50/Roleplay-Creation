@@ -1,6 +1,6 @@
 import svgPaths from "@/imports/svg-t7e50z2hox";
 import imgAlexJonathan from "@/assets/Alex.png";
-import { IconPencil, IconEye, IconArrowRight, IconArrowLeft, IconFileText, IconUser, IconClipboardCheck, IconDoorExit, IconSettings, IconX, IconPlus, IconPhoto, IconMoodAngry, IconMoodSad, IconMoodHappy, IconMoodNeutral, IconAlertCircle, IconClock, IconFlame, IconUsers, IconChevronDown, IconTrash, IconCheck, IconPlayerStop, IconPhoneOff, IconUserUp, IconTimeDuration10, IconSearch, IconDeviceFloppy, IconDownload, IconUserPlus } from "@tabler/icons-react";
+import { IconPencil, IconEye, IconArrowRight, IconArrowLeft, IconFileText, IconUser, IconClipboardCheck, IconDoorExit, IconSettings, IconX, IconPlus, IconPhoto, IconMoodAngry, IconMoodSad, IconMoodHappy, IconMoodNeutral, IconAlertCircle, IconClock, IconFlame, IconUsers, IconChevronDown, IconTrash, IconCheck, IconPlayerStop, IconPhoneOff, IconUserUp, IconTimeDuration10, IconSearch, IconDeviceFloppy, IconDownload, IconUserPlus, IconArrowUpRight } from "@tabler/icons-react";
 import { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -830,39 +830,58 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
       <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
         {/* Header */}
         <div className="border-b border-[#eee] px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Title Section */}
-            <div className="flex items-center gap-3">
-              {isEditingTitle ? (
-                <input
-                  type="text"
-                  value={scenarioTitle}
-                  onChange={(e) => setScenarioTitle(e.target.value)}
-                  onBlur={() => setIsEditingTitle(false)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      setIsEditingTitle(false);
-                    } else if (e.key === "Escape") {
-                      setIsEditingTitle(false);
-                    }
+          <div className="flex items-start justify-between">
+            {/* Left Section - Title and Workflow Link */}
+            <div className="flex flex-col">
+              {/* Title Row */}
+              <div className="flex items-center gap-3">
+                {isEditingTitle ? (
+                  <input
+                    type="text"
+                    value={scenarioTitle}
+                    onChange={(e) => setScenarioTitle(e.target.value)}
+                    onBlur={() => setIsEditingTitle(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setIsEditingTitle(false);
+                      } else if (e.key === "Escape") {
+                        setIsEditingTitle(false);
+                      }
+                    }}
+                    className="text-[20px] font-semibold text-[#2b2b40] border-b border-[#0975d7] focus:outline-none bg-transparent"
+                    autoFocus
+                  />
+                ) : (
+                  <h1 className="text-[20px] font-semibold text-[#2b2b40]">
+                    {scenarioTitle}
+                  </h1>
+                )}
+                <button 
+                  onClick={() => setIsEditingTitle(true)}
+                  className="p-2 hover:bg-gray-100 rounded"
+                >
+                  <IconPencil className="w-4 h-4 text-[#8d8ba7]" stroke={2.5} />
+                </button>
+                <button className="p-2 hover:bg-gray-100 rounded">
+                  <IconEye className="w-4 h-4 text-[#8d8ba7]" stroke={2.5} />
+                </button>
+              </div>
+
+              {/* Workflow Link - Below Title */}
+              {attachedWorkflow && (
+                <button 
+                  className="flex items-center gap-1.5 mt-1.5 text-[13px] text-[#8d8ba7] hover:text-[#6b6b80] transition-colors group"
+                  onClick={() => {
+                    // Navigate to workflow
+                    console.log("Navigate to workflow:", attachedWorkflow.id);
                   }}
-                  className="text-[20px] font-semibold text-[#2b2b40] border-b border-[#0975d7] focus:outline-none bg-transparent"
-                  autoFocus
-                />
-              ) : (
-                <h1 className="text-[20px] font-semibold text-[#2b2b40]">
-                  {scenarioTitle}
-                </h1>
+                >
+                  <div className="w-5 h-5 rounded-full bg-[#f0f0f5] flex items-center justify-center group-hover:bg-[#e5e5ea] transition-colors">
+                    <IconArrowUpRight className="w-3 h-3 text-[#8d8ba7]" stroke={2} />
+                  </div>
+                  <span className="group-hover:underline">{attachedWorkflow.name}</span>
+                </button>
               )}
-              <button 
-                onClick={() => setIsEditingTitle(true)}
-                className="p-2 hover:bg-gray-100 rounded"
-              >
-                <IconPencil className="w-4 h-4 text-[#8d8ba7]" stroke={2.5} />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded">
-                <IconEye className="w-4 h-4 text-[#8d8ba7]" stroke={2.5} />
-              </button>
             </div>
 
             {/* Right Actions */}
@@ -882,18 +901,6 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                 {attachedWorkflow ? "Update workflow" : "Attach to workflow"}
                 <IconArrowRight className="size-4" stroke={2} />
               </button>
-              {attachedWorkflow && (
-                <button 
-                  className="flex items-center gap-2 text-[13px] text-[#0975d7] hover:text-[#0861b8] hover:underline transition-colors"
-                  onClick={() => {
-                    // Navigate to workflow - for now just log
-                    console.log("Navigate to workflow:", attachedWorkflow.id);
-                  }}
-                >
-                  <div className="w-[6px] h-[6px] rounded-full bg-[#0975d7]"></div>
-                  <span>{attachedWorkflow.name}</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
