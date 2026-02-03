@@ -1189,7 +1189,6 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
           <div aria-hidden="true" className="absolute border-[#ececf3] border-[1px_0px_0px] border-solid inset-0 pointer-events-none" />
           <div className="flex flex-col gap-[12px] items-start relative w-[590px] min-h-[500px]">
             {/* Tab Group - Left aligned above content */}
-            <div className="flex gap-[8px] items-center justify-between w-full">
             <div className="flex gap-[8px] items-center bg-white rounded-[8px] p-[4px] border border-[#ececf3] w-fit">
               <motion.button
                 onClick={() => {}}
@@ -1207,31 +1206,6 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
               >
                 Prompt
               </motion.button>
-            </div>
-
-              {/* Mode Indicator */}
-              <div 
-                className="flex items-center gap-[6px] px-[10px] py-[5px] rounded-[6px] bg-[#f8fafc] border border-[#e2e8f0] cursor-pointer hover:bg-[#f1f5f9] transition-colors"
-                onClick={() => {
-                  setDisplayMode(prev => {
-                    const currentIndex = displayModes.indexOf(prev);
-                    const nextIndex = (currentIndex + 1) % displayModes.length;
-                    return displayModes[nextIndex];
-                  });
-                }}
-                title="Click to switch mode (⌘+Shift+M)"
-              >
-                <div className="flex gap-[4px]">
-                  {displayModes.map((mode) => (
-                    <div 
-                      key={mode}
-                      className={`w-[8px] h-[8px] rounded-full transition-colors ${
-                        mode === displayMode ? "bg-[#0975d7]" : "bg-[#cbd5e1]"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* INTERVIEW MODE */}
