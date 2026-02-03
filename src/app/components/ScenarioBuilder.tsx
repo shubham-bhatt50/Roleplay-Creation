@@ -921,7 +921,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
     return status === "Published" ? "bg-[#dcfce7] text-[#166534]" : "bg-[#fef3c7] text-[#92400e]";
   };
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColorClass = (difficulty: string) => {
     if (difficulty === "High") return "text-[#dc2626]";
     if (difficulty === "Medium") return "text-[#f59e0b]";
     return "text-[#22c55e]";
@@ -1006,7 +1006,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
                         <span className="px-[8px] py-[3px] rounded-[4px] bg-[#f3f4f6] text-[11px] text-[#4b5563] font-['Inter:Medium',sans-serif]">
                           {roleplay.modality}
                         </span>
-                        <span className={`text-[11px] font-['Inter:Medium',sans-serif] ${getDifficultyColor(roleplay.difficulty)}`}>
+                        <span className={`text-[11px] font-['Inter:Medium',sans-serif] ${getDifficultyColorClass(roleplay.difficulty)}`}>
                           {roleplay.difficulty} difficulty
                         </span>
                       </div>
