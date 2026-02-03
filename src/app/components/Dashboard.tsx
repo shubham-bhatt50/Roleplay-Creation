@@ -12,15 +12,28 @@ interface AttachedRoleplay {
 interface DashboardProps {
   onNavigateToRoleplay: () => void;
   onNavigateToSimulation: () => void;
+  onNavigateToWorkflow?: (workflowId: string, workflowName: string, roleplayName?: string) => void;
   attachedRoleplays?: AttachedRoleplay[];
 }
 
-export function Dashboard({ onNavigateToRoleplay, onNavigateToSimulation, attachedRoleplays = [] }: DashboardProps) {
+export function Dashboard({ onNavigateToRoleplay, onNavigateToSimulation, onNavigateToWorkflow, attachedRoleplays = [] }: DashboardProps) {
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
 
   // Check if a workflow has an attached roleplay
   const hasRoleplay = (workflowName: string) => {
     return attachedRoleplays.some((r) => r.workflowName === workflowName);
+  };
+
+  // Get the roleplay title for a workflow
+  const getRoleplayTitle = (workflowName: string) => {
+    const roleplay = attachedRoleplays.find((r) => r.workflowName === workflowName);
+    return roleplay?.scenarioTitle;
+  };
+
+  // Handle workflow row click
+  const handleWorkflowClick = (workflowId: string, workflowName: string) => {
+    const roleplayTitle = getRoleplayTitle(workflowName);
+    onNavigateToWorkflow?.(workflowId, workflowName, roleplayTitle);
   };
 
   return (
@@ -127,15 +140,27 @@ export function Dashboard({ onNavigateToRoleplay, onNavigateToSimulation, attach
             </thead>
             <tbody>
               {[
-                { name: "H2 2025 Learning", count: "7", type: "Simulation", creator: "Mark S", updated: "Simulation", isWorkflow: false },
-                { name: "Guidewire environment 2", count: "5", type: "Simulation", creator: "Ann Perkins", updated: "Simulation", isWorkflow: false },
-                { name: "Guidewire workflow list archive 2", count: "9", type: "Simulation", creator: "Ann Perkins", updated: "Simulation", isWorkflow: false },
-                { name: "New claim | Guidewire 2", count: "5", type: "Workflow", creator: "Juliette Nichols", updated: "Simulation", isWorkflow: true },
+                { id: "1", name: "H2 2025 Learning", count: "7", type: "Simulation", creator: "Mark S", updated: "Simulation", isWorkflow: false },
+                { id: "2", name: "Guidewire environment 2", count: "5", type: "Simulation", creator: "Ann Perkins", updated: "Simulation", isWorkflow: false },
+                { id: "3", name: "Guidewire workflow list archive 2", count: "9", type: "Simulation", creator: "Ann Perkins", updated: "Simulation", isWorkflow: false },
+                { id: "4", name: "New claim | Guidewire 2", count: "5", type: "Workflow", creator: "Juliette Nichols", updated: "Simulation", isWorkflow: true },
               ].map((row, index) => (
-                <tr key={index} className="border-b border-[#ececf3] hover:bg-[#f9f9f9]">
+                <tr 
+                  key={index} 
+                  className={`border-b border-[#ececf3] hover:bg-[#f9f9f9] ${row.isWorkflow ? 'cursor-pointer' : ''}`}
+                  onClick={() => {
+                    if (row.isWorkflow) {
+                      handleWorkflowClick(row.id, row.name);
+                    }
+                  }}
+                >
                   <td className="p-[16px]">
                     <div className="flex items-center gap-[12px]">
-                      <input type="checkbox" className="size-[16px] rounded border-[#d7d6d1]" />
+                      <input 
+                        type="checkbox" 
+                        className="size-[16px] rounded border-[#d7d6d1]" 
+                        onClick={(e) => e.stopPropagation()}
+                      />
                       {row.isWorkflow ? (
                         <div className="flex items-center justify-center size-[16px]">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b697b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -148,7 +173,7 @@ export function Dashboard({ onNavigateToRoleplay, onNavigateToSimulation, attach
                       ) : (
                         <IconFolder className="size-[16px] text-[#6b697b]" stroke={2} />
                       )}
-                      <span className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px]">{row.name}</span>
+                      <span className={`font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px] ${row.isWorkflow ? 'hover:text-[#0975d7] hover:underline' : ''}`}>{row.name}</span>
                       <span className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#6b697b] text-[14px]">{row.count}</span>
                       {hasRoleplay(row.name) && (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ecfdf5] text-[#059669] text-xs font-medium">

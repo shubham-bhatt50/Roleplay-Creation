@@ -129,6 +129,7 @@ export default function App() {
               key="dashboard"
               onNavigateToRoleplay={() => setCurrentScreen("roleplay")}
               onNavigateToSimulation={() => setCurrentScreen("simulation")}
+              onNavigateToWorkflow={handleNavigateToWorkflow}
               attachedRoleplays={attachedRoleplays}
             />
           )}
