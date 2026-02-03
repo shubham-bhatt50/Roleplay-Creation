@@ -416,18 +416,8 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
   };
 
   const getExitConditionColor = (icon: ExitCondition["icon"]) => {
-    switch (icon) {
-      case "resolution":
-        return { bg: "linear-gradient(135deg, #10b981 0%, #059669 100%)", iconBg: "#dcfce7", iconColor: "#16a34a" };
-      case "time":
-        return { bg: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", iconBg: "#fef3c7", iconColor: "#d97706" };
-      case "escalate":
-        return { bg: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)", iconBg: "#ede9fe", iconColor: "#7c3aed" };
-      case "end":
-        return { bg: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)", iconBg: "#fee2e2", iconColor: "#dc2626" };
-      default:
-        return { bg: "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)", iconBg: "#f3f4f6", iconColor: "#6b7280" };
-    }
+    // Minimalistic - all conditions use the same subtle styling
+    return { iconBg: "#f5f5f7", iconColor: "#6b697b" };
   };
 
   const addExitCondition = () => {
@@ -2139,8 +2129,8 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
             )}
 
             {activeTab === "exit" && (
-              <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-gradient-to-br from-[#fafafa] to-[#f0f4f8]">
-                <div className="border-b border-[#eee] py-4 shrink-0 bg-white">
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
+                <div className="border-b border-[#eee] py-4 shrink-0">
                   <div className="px-6 flex items-center justify-between">
                     <div>
                       <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Exit conditions</h2>
@@ -2148,194 +2138,160 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                     </div>
                     <button
                       onClick={addExitCondition}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#0975d7] text-white rounded-lg hover:bg-[#0861b8] transition-colors text-sm font-medium"
+                      className="flex items-center gap-2 px-4 py-2 border border-[#e5e5ea] text-[#2b2b40] rounded-lg hover:bg-[#f5f5f7] transition-colors text-sm font-medium"
                     >
                       <IconPlus className="w-4 h-4" stroke={2} />
-                      Add exit condition
+                      Add condition
                     </button>
                   </div>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto py-8 px-6">
-                  <div className="max-w-3xl mx-auto">
-                    {/* Conditions flow */}
-                    <div className="relative">
-                      {exitConditions.map((condition, index) => {
-                        const Icon = getExitConditionIcon(condition.icon);
-                        const colors = getExitConditionColor(condition.icon);
-                        const isEditingTrigger = editingExitCondition?.id === condition.id && editingExitCondition?.field === "trigger";
-                        const isEditingAction = editingExitCondition?.id === condition.id && editingExitCondition?.field === "action";
-                        const isLastCard = index === exitConditions.length - 1;
+                <div className="flex-1 min-h-0 overflow-y-auto py-6 px-6">
+                  <div className="max-w-2xl mx-auto space-y-3">
+                    {exitConditions.map((condition, index) => {
+                      const Icon = getExitConditionIcon(condition.icon);
+                      const isEditingTrigger = editingExitCondition?.id === condition.id && editingExitCondition?.field === "trigger";
+                      const isEditingAction = editingExitCondition?.id === condition.id && editingExitCondition?.field === "action";
 
-                        return (
-                          <div key={condition.id} className="relative group">
-                            {/* Connector FROM this card to the next (if not last) */}
-                            {!isLastCard && (
-                              <div className="absolute left-1/2 transform -translate-x-1/2 z-10" style={{ top: '100%' }}>
-                                {/* Top connecting line */}
-                                <div className="w-0.5 h-6 bg-gradient-to-b from-[#d1d5db] to-[#9ca3af] mx-auto" />
-                                {/* OR badge */}
-                                <div className="flex items-center justify-center">
-                                  <span className="text-[10px] font-bold tracking-wider text-[#9ca3af] bg-white border border-[#e5e7eb] px-3 py-1 rounded-full shadow-sm">OR</span>
-                                </div>
-                                {/* Bottom connecting line */}
-                                <div className="w-0.5 h-6 bg-gradient-to-b from-[#9ca3af] to-[#d1d5db] mx-auto" />
-                              </div>
-                            )}
+                      return (
+                        <div key={condition.id} className="group">
+                          {/* Condition row */}
+                          <div className="flex items-center gap-3 p-4 bg-[#fafafa] rounded-lg border border-[#e5e5ea] hover:border-[#d1d1d6] transition-colors">
+                            {/* Number indicator */}
+                            <div className="shrink-0 w-6 h-6 rounded-full bg-[#e5e5ea] flex items-center justify-center">
+                              <span className="text-xs font-medium text-[#6b697b]">{index + 1}</span>
+                            </div>
 
-                            {/* Spacing for cards after first */}
-                            {index > 0 && <div className="h-16" />}
+                            {/* Icon button */}
+                            <button
+                              onClick={() => cycleExitConditionIcon(condition.id)}
+                              className="shrink-0 w-8 h-8 rounded-lg bg-white border border-[#e5e5ea] flex items-center justify-center hover:border-[#0975d7] hover:bg-[#f0f7ff] transition-colors"
+                              title="Click to change icon"
+                            >
+                              <Icon className="w-4 h-4 text-[#6b697b]" stroke={2} />
+                            </button>
 
-                            {/* Card container */}
-                            <div className="relative bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-[#e5e7eb] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:border-[#d1d5db]">
-                              {/* Top gradient bar */}
-                              <div 
-                                className="h-1.5"
-                                style={{ background: colors.bg }}
-                              />
-                              
-                              <div className="p-5">
-                                {/* If-Then layout */}
-                                <div className="flex items-stretch gap-4">
-                                  {/* IF section */}
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-3">
-                                      <span className="text-[10px] font-bold tracking-wider text-[#6b7280] uppercase bg-[#f3f4f6] px-2 py-1 rounded">If</span>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                      <button
-                                        onClick={() => cycleExitConditionIcon(condition.id)}
-                                        className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-transform hover:scale-110 cursor-pointer"
-                                        style={{ backgroundColor: colors.iconBg }}
-                                        title="Click to change icon"
-                                      >
-                                        <Icon className="w-5 h-5" stroke={2} style={{ color: colors.iconColor }} />
-                                      </button>
-                                      {isEditingTrigger ? (
-                                        <input
-                                          type="text"
-                                          value={exitConditionEditValue}
-                                          onChange={(e) => setExitConditionEditValue(e.target.value)}
-                                          onBlur={() => {
-                                            if (exitConditionEditValue.trim()) {
-                                              updateExitCondition(condition.id, "trigger", exitConditionEditValue.trim());
-                                            }
-                                            setEditingExitCondition(null);
-                                            setExitConditionEditValue("");
-                              }}
-                              onKeyDown={(e) => {
-                                            if (e.key === "Enter" && exitConditionEditValue.trim()) {
-                                              updateExitCondition(condition.id, "trigger", exitConditionEditValue.trim());
-                                              setEditingExitCondition(null);
-                                              setExitConditionEditValue("");
-                                } else if (e.key === "Escape") {
-                                              setEditingExitCondition(null);
-                                              setExitConditionEditValue("");
-                                }
-                              }}
-                                          className="flex-1 text-sm text-[#374151] font-medium border-b-2 border-[#0975d7] focus:outline-none bg-transparent py-1"
-                              autoFocus
-                            />
-                          ) : (
-                                        <div
-                                          onClick={() => {
-                                            setEditingExitCondition({ id: condition.id, field: "trigger" });
-                                            setExitConditionEditValue(condition.trigger);
-                                          }}
-                                          className="flex-1 text-sm text-[#374151] font-medium cursor-text hover:text-[#0975d7] transition-colors py-1"
-                                        >
-                                          {condition.trigger}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
+                            {/* Condition text */}
+                            <div className="flex-1 flex items-center gap-2 min-w-0">
+                              <span className="text-xs font-semibold text-[#8d8ba7] uppercase tracking-wide shrink-0">If</span>
+                              {isEditingTrigger ? (
+                                <input
+                                  type="text"
+                                  value={exitConditionEditValue}
+                                  onChange={(e) => setExitConditionEditValue(e.target.value)}
+                                  onBlur={() => {
+                                    if (exitConditionEditValue.trim()) {
+                                      updateExitCondition(condition.id, "trigger", exitConditionEditValue.trim());
+                                    }
+                                    setEditingExitCondition(null);
+                                    setExitConditionEditValue("");
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && exitConditionEditValue.trim()) {
+                                      updateExitCondition(condition.id, "trigger", exitConditionEditValue.trim());
+                                      setEditingExitCondition(null);
+                                      setExitConditionEditValue("");
+                                    } else if (e.key === "Escape") {
+                                      setEditingExitCondition(null);
+                                      setExitConditionEditValue("");
+                                    }
+                                  }}
+                                  className="flex-1 text-sm text-[#2b2b40] border-b border-[#0975d7] focus:outline-none bg-transparent"
+                                  autoFocus
+                                />
+                              ) : (
+                                <span
+                                  onClick={() => {
+                                    setEditingExitCondition({ id: condition.id, field: "trigger" });
+                                    setExitConditionEditValue(condition.trigger);
+                                  }}
+                                  className="text-sm text-[#2b2b40] cursor-text hover:text-[#0975d7] transition-colors truncate"
+                                >
+                                  {condition.trigger}
+                                </span>
+                              )}
+                            </div>
 
-                                  {/* Arrow connector */}
-                                  <div className="flex items-center px-2">
-                                    <div className="flex items-center gap-1">
-                                      <div className="w-8 h-0.5 bg-gradient-to-r from-[#d1d5db] to-[#9ca3af] rounded" />
-                                      <div 
-                                        className="w-8 h-8 rounded-full flex items-center justify-center shadow-md"
-                                        style={{ background: colors.bg }}
-                                      >
-                                        <IconArrowRight className="w-4 h-4 text-white" stroke={2.5} />
-                                      </div>
-                                      <div className="w-8 h-0.5 bg-gradient-to-r from-[#9ca3af] to-[#d1d5db] rounded" />
-                                    </div>
-                                  </div>
+                            {/* Arrow */}
+                            <IconArrowRight className="shrink-0 w-4 h-4 text-[#c5c5c5]" stroke={2} />
 
-                                  {/* THEN section */}
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-3">
-                                      <span className="text-[10px] font-bold tracking-wider text-[#6b7280] uppercase bg-[#f3f4f6] px-2 py-1 rounded">Then</span>
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                      <div 
-                                        className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
-                                        style={{ backgroundColor: "#fee2e2" }}
-                                      >
-                                        <IconPlayerStop className="w-5 h-5" stroke={2} style={{ color: "#dc2626" }} />
-                                      </div>
-                                      {isEditingAction ? (
-                                        <input
-                                          type="text"
-                                          value={exitConditionEditValue}
-                                          onChange={(e) => setExitConditionEditValue(e.target.value)}
-                                          onBlur={() => {
-                                            if (exitConditionEditValue.trim()) {
-                                              updateExitCondition(condition.id, "action", exitConditionEditValue.trim());
-                                            }
-                                            setEditingExitCondition(null);
-                                            setExitConditionEditValue("");
-                                          }}
-                                          onKeyDown={(e) => {
-                                            if (e.key === "Enter" && exitConditionEditValue.trim()) {
-                                              updateExitCondition(condition.id, "action", exitConditionEditValue.trim());
-                                              setEditingExitCondition(null);
-                                              setExitConditionEditValue("");
-                                            } else if (e.key === "Escape") {
-                                              setEditingExitCondition(null);
-                                              setExitConditionEditValue("");
-                                            }
-                                          }}
-                                          className="flex-1 text-sm text-[#374151] font-medium border-b-2 border-[#0975d7] focus:outline-none bg-transparent py-1"
-                                          autoFocus
-                                        />
-                                      ) : (
-                                        <div
-                            onClick={() => {
-                                            setEditingExitCondition({ id: condition.id, field: "action" });
-                                            setExitConditionEditValue(condition.action);
-                                          }}
-                                          className="flex-1 text-sm text-[#374151] font-medium cursor-text hover:text-[#0975d7] transition-colors py-1"
-                                        >
-                                          {condition.action}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
+                            {/* Action text */}
+                            <div className="flex items-center gap-2 min-w-0" style={{ width: '200px' }}>
+                              <span className="text-xs font-semibold text-[#8d8ba7] uppercase tracking-wide shrink-0">Then</span>
+                              {isEditingAction ? (
+                                <input
+                                  type="text"
+                                  value={exitConditionEditValue}
+                                  onChange={(e) => setExitConditionEditValue(e.target.value)}
+                                  onBlur={() => {
+                                    if (exitConditionEditValue.trim()) {
+                                      updateExitCondition(condition.id, "action", exitConditionEditValue.trim());
+                                    }
+                                    setEditingExitCondition(null);
+                                    setExitConditionEditValue("");
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && exitConditionEditValue.trim()) {
+                                      updateExitCondition(condition.id, "action", exitConditionEditValue.trim());
+                                      setEditingExitCondition(null);
+                                      setExitConditionEditValue("");
+                                    } else if (e.key === "Escape") {
+                                      setEditingExitCondition(null);
+                                      setExitConditionEditValue("");
+                                    }
+                                  }}
+                                  className="flex-1 text-sm text-[#2b2b40] border-b border-[#0975d7] focus:outline-none bg-transparent"
+                                  autoFocus
+                                />
+                              ) : (
+                                <span
+                                  onClick={() => {
+                                    setEditingExitCondition({ id: condition.id, field: "action" });
+                                    setExitConditionEditValue(condition.action);
+                                  }}
+                                  className="text-sm text-[#2b2b40] cursor-text hover:text-[#0975d7] transition-colors truncate"
+                                >
+                                  {condition.action}
+                                </span>
+                              )}
+                            </div>
 
-                                  {/* Delete button */}
-                                  <button
-                                    onClick={() => deleteExitCondition(condition.id)}
-                                    className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-[#fee2e2] rounded-lg self-start"
-                                    title="Delete condition"
-                                  >
-                                    <IconTrash className="w-4 h-4 text-[#dc2626]" stroke={2} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                            {/* Delete button */}
+                            <button
+                              onClick={() => deleteExitCondition(condition.id)}
+                              className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-[#fee2e2] rounded"
+                              title="Delete condition"
+                            >
+                              <IconX className="w-3.5 h-3.5 text-[#dc2626]" stroke={2} />
+                            </button>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      );
+                    })}
 
-                    {/* Helper text */}
-                    <p className="mt-6 text-center text-xs text-[#9ca3af]">
-                      Click on any text to edit • Click icons to change type • Hover to delete
-                    </p>
+                    {/* Empty state */}
+                    {exitConditions.length === 0 && (
+                      <div className="text-center py-12">
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#f5f5f7] flex items-center justify-center">
+                          <IconDoorExit className="w-6 h-6 text-[#8d8ba7]" stroke={1.5} />
+                        </div>
+                        <p className="text-sm text-[#8d8ba7] mb-4">No exit conditions defined</p>
+                        <button
+                          onClick={addExitCondition}
+                          className="text-sm text-[#0975d7] hover:underline font-medium"
+                        >
+                          Add your first condition
+                        </button>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Helper text */}
+                  {exitConditions.length > 0 && (
+                    <p className="mt-6 text-center text-xs text-[#b5b5b5]">
+                      Click text to edit • Click icon to change type
+                    </p>
+                  )}
                 </div>
               </div>
             )}
