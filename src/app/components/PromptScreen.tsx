@@ -1,6 +1,60 @@
-import { IconFileText, IconPlus, IconMicrophone, IconArrowRight, IconArrowLeft, IconLoader2 } from "@tabler/icons-react";
-import { motion } from "framer-motion";
+import { IconFileText, IconPlus, IconMicrophone, IconArrowRight, IconArrowLeft, IconLoader2, IconX, IconUser, IconCalendar, IconPlayerPlay, IconDotsVertical } from "@tabler/icons-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+
+// Sample roleplay data
+const existingRoleplays = [
+  {
+    id: "1",
+    title: "Handling angry customer for refund",
+    description: "Customer wants full refund for damaged product",
+    createdBy: "Sarah Johnson",
+    createdAt: "2026-01-28",
+    modality: "Voice",
+    difficulty: "High",
+    status: "Published"
+  },
+  {
+    id: "2",
+    title: "Upselling premium subscription",
+    description: "Convert free users to paid plans",
+    createdBy: "Mike Chen",
+    createdAt: "2026-01-25",
+    modality: "Chat",
+    difficulty: "Medium",
+    status: "Draft"
+  },
+  {
+    id: "3",
+    title: "Technical support troubleshooting",
+    description: "Help customer resolve login issues",
+    createdBy: "Sarah Johnson",
+    createdAt: "2026-01-20",
+    modality: "Voice",
+    difficulty: "Low",
+    status: "Published"
+  },
+  {
+    id: "4",
+    title: "New feature walkthrough",
+    description: "Guide customer through new dashboard features",
+    createdBy: "Alex Rivera",
+    createdAt: "2026-01-15",
+    modality: "Hybrid",
+    difficulty: "Medium",
+    status: "Published"
+  },
+  {
+    id: "5",
+    title: "Cancellation prevention",
+    description: "Retain customers who want to cancel subscription",
+    createdBy: "Mike Chen",
+    createdAt: "2026-01-10",
+    modality: "Voice",
+    difficulty: "High",
+    status: "Draft"
+  }
+];
 
 interface PromptScreenProps {
   onBack: () => void;
@@ -34,6 +88,7 @@ const promptTemplates = [
 export function PromptScreen({ onBack, onSwitchToBuilder, onGenerateScenario }: PromptScreenProps) {
   const [promptText, setPromptText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleTemplateClick = (content: string) => {
     setPromptText(content);
@@ -48,6 +103,133 @@ export function PromptScreen({ onBack, onSwitchToBuilder, onGenerateScenario }: 
       }, 2000); // 2 second delay
     }
   };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const getStatusColor = (status: string) => {
+    return status === "Published" ? "bg-[#dcfce7] text-[#166534]" : "bg-[#fef3c7] text-[#92400e]";
+  };
+
+  const getDifficultyColorClass = (difficulty: string) => {
+    if (difficulty === "High") return "text-[#dc2626]";
+    if (difficulty === "Medium") return "text-[#f59e0b]";
+    return "text-[#22c55e]";
+  };
+
+  // Roleplay Sidebar Component
+  const RoleplaySidebar = () => (
+    <AnimatePresence>
+      {isSidebarOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/20 z-40"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+          
+          {/* Sidebar */}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed right-0 top-0 h-full w-[420px] bg-white shadow-[-8px_0_24px_rgba(0,0,0,0.12)] z-50 flex flex-col"
+          >
+            {/* Sidebar Header */}
+            <div className="flex items-center justify-between px-[20px] py-[16px] border-b border-[#ececf3]">
+              <div className="flex flex-col gap-[2px]">
+                <h2 className="font-['Inter:Semi_Bold',sans-serif] font-semibold text-[18px] text-[#1f2937]">
+                  All roleplays
+                </h2>
+                <p className="font-['Inter:Regular',sans-serif] text-[13px] text-[#6b7280]">
+                  {existingRoleplays.length} scenarios available
+                </p>
+              </div>
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="p-[8px] rounded-[6px] hover:bg-[#f5f5f5] transition-colors"
+              >
+                <IconX className="size-[20px] text-[#6b7280]" stroke={2} />
+              </button>
+            </div>
+
+            {/* Roleplay List */}
+            <div className="flex-1 overflow-y-auto">
+              {existingRoleplays.map((roleplay) => (
+                <div
+                  key={roleplay.id}
+                  className="px-[20px] py-[16px] border-b border-[#f3f4f6] hover:bg-[#f9fafb] transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-start justify-between gap-[12px]">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-[8px] mb-[4px]">
+                        <h3 className="font-['Inter:Medium',sans-serif] font-medium text-[14px] text-[#1f2937] truncate">
+                          {roleplay.title}
+                        </h3>
+                        <span className={`px-[6px] py-[2px] rounded-[4px] text-[11px] font-['Inter:Medium',sans-serif] font-medium ${getStatusColor(roleplay.status)}`}>
+                          {roleplay.status}
+                        </span>
+                      </div>
+                      <p className="font-['Inter:Regular',sans-serif] text-[13px] text-[#6b7280] truncate mb-[10px]">
+                        {roleplay.description}
+                      </p>
+                      
+                      {/* Metadata */}
+                      <div className="flex items-center gap-[16px] text-[12px]">
+                        <div className="flex items-center gap-[4px] text-[#6b7280]">
+                          <IconUser className="size-[14px]" stroke={1.5} />
+                          <span className="font-['Inter:Regular',sans-serif]">{roleplay.createdBy}</span>
+                        </div>
+                        <div className="flex items-center gap-[4px] text-[#6b7280]">
+                          <IconCalendar className="size-[14px]" stroke={1.5} />
+                          <span className="font-['Inter:Regular',sans-serif]">{formatDate(roleplay.createdAt)}</span>
+                        </div>
+                      </div>
+
+                      {/* Tags */}
+                      <div className="flex items-center gap-[8px] mt-[10px]">
+                        <span className="px-[8px] py-[3px] rounded-[4px] bg-[#f3f4f6] text-[11px] text-[#4b5563] font-['Inter:Medium',sans-serif]">
+                          {roleplay.modality}
+                        </span>
+                        <span className={`text-[11px] font-['Inter:Medium',sans-serif] ${getDifficultyColorClass(roleplay.difficulty)}`}>
+                          {roleplay.difficulty} difficulty
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-[4px] opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="p-[6px] rounded-[4px] hover:bg-[#e5e7eb] transition-colors" title="Preview">
+                        <IconPlayerPlay className="size-[16px] text-[#6b7280]" stroke={1.5} />
+                      </button>
+                      <button className="p-[6px] rounded-[4px] hover:bg-[#e5e7eb] transition-colors" title="More options">
+                        <IconDotsVertical className="size-[16px] text-[#6b7280]" stroke={1.5} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Sidebar Footer */}
+            <div className="px-[20px] py-[16px] border-t border-[#ececf3] bg-[#f9fafb]">
+              <button className="w-full py-[10px] px-[16px] rounded-[8px] bg-[#0975d7] hover:bg-[#0861b8] text-white font-['Inter:Medium',sans-serif] font-medium text-[14px] transition-colors">
+                Create new roleplay
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+
   return (
     <div className="flex-1 bg-[#fcfcfd] flex flex-col overflow-hidden">
       <div className="flex flex-col gap-[12px] items-start p-[16px] flex-1 overflow-auto">
@@ -65,7 +247,7 @@ export function PromptScreen({ onBack, onSwitchToBuilder, onGenerateScenario }: 
           </div>
           <div className="basis-0 content-stretch flex gap-[602px] grow items-start justify-end min-h-px min-w-px relative shrink-0">
             <button 
-              onClick={onBack}
+              onClick={() => setIsSidebarOpen(true)}
               className="content-stretch flex flex-col gap-[6px] items-start relative shrink-0 hover:opacity-80 transition-opacity"
             >
               <p className="font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[24px] not-italic relative shrink-0 text-[#0975d7] text-[16px] text-nowrap">All existing roleplays</p>
@@ -193,6 +375,9 @@ export function PromptScreen({ onBack, onSwitchToBuilder, onGenerateScenario }: 
           </div>
         </div>
       </div>
+
+      {/* Roleplay Sidebar */}
+      <RoleplaySidebar />
     </div>
   );
 }
