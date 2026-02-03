@@ -18,25 +18,6 @@ const screenVariants = {
   exit: { opacity: 0, y: -8, transition: { duration: 0.15, ease: "easeIn" } }
 };
 
-// Loading overlay component
-function LoadingOverlay({ message }: { message: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center"
-    >
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative">
-          <div className="w-10 h-10 border-3 border-[#e5e5ea] rounded-full" />
-          <div className="absolute inset-0 w-10 h-10 border-3 border-transparent border-t-[#0975d7] rounded-full animate-spin" />
-        </div>
-        <p className="text-sm text-[#6b697b] font-medium">{message}</p>
-      </div>
-    </motion.div>
-  );
-}
 
 interface AttachedRoleplay {
   workflowId: string;
@@ -64,167 +45,115 @@ export default function App() {
   const [scenarioData, setScenarioData] = useState<ScenarioData | null>(null);
   const [attachedWorkflow, setAttachedWorkflow] = useState<{ id: string; name: string } | null>(null);
   const [currentWorkflow, setCurrentWorkflow] = useState<{ id: string; name: string; attachedRoleplay?: { id: string; name: string } } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState("");
-
-  // Helper to navigate with loading state
-  const navigateWithLoading = (screen: Screen, message: string, delay: number = 600) => {
-    setLoadingMessage(message);
-    setIsLoading(true);
-    setTimeout(() => {
-      setCurrentScreen(screen);
-      setIsLoading(false);
-    }, delay);
-  };
-
   const handleGenerateScenario = (data: ScenarioData) => {
     setScenarioData(data);
-    setLoadingMessage("Generating scenario...");
-    setIsLoading(true);
     // Simulate AI generation time
     setTimeout(() => {
-      setIsLoading(false);
       setCurrentScreen("scenarioDetail");
-    }, 2500);
+    }, 2000);
   };
 
   const handleAttachWorkflow = (workflowId: string, workflowName: string) => {
-    setLoadingMessage("Attaching workflow...");
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      // Add the roleplay attachment to state
-      setAttachedRoleplays((prev) => {
-        if (prev.some((r) => r.workflowId === workflowId)) {
-          return prev;
-        }
-        return [
-          ...prev,
-          {
-            workflowId,
-            workflowName,
-            scenarioTitle: "Dealing with angry customer for refund scenario",
-          },
-        ];
-      });
-      setIsLoading(false);
-      setCurrentScreen("dashboard");
-    }, 800);
+    setAttachedRoleplays((prev) => {
+      if (prev.some((r) => r.workflowId === workflowId)) {
+        return prev;
+      }
+      return [
+        ...prev,
+        {
+          workflowId,
+          workflowName,
+          scenarioTitle: "Dealing with angry customer for refund scenario",
+        },
+      ];
+    });
+    setCurrentScreen("dashboard");
   };
 
   const handleNavigateToDetail = (roleplayId: string, workflow?: { id: string; name: string } | null) => {
-    setLoadingMessage("Loading roleplay...");
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      const defaultScenarioData: ScenarioData = {
-        trainee: "Customer support executives",
-        customerName: "Alex",
-        emotion: "Frustrated",
-        scenario: "they want a full refund for a product they bought",
-        objective: "De-escalate the situation",
-        criteria1: "Empathy",
-        criteria2: "De-escalation",
-        criteria3: "Policy adherence",
-        modality: "Audio",
-        difficulty: "High"
-      };
-      setScenarioData(defaultScenarioData);
-      setAttachedWorkflow(workflow || null);
-      setIsLoading(false);
-      setCurrentScreen("scenarioDetail");
-    }, 700);
+    const defaultScenarioData: ScenarioData = {
+      trainee: "Customer support executives",
+      customerName: "Alex",
+      emotion: "Frustrated",
+      scenario: "they want a full refund for a product they bought",
+      objective: "De-escalate the situation",
+      criteria1: "Empathy",
+      criteria2: "De-escalation",
+      criteria3: "Policy adherence",
+      modality: "Audio",
+      difficulty: "High"
+    };
+    setScenarioData(defaultScenarioData);
+    setAttachedWorkflow(workflow || null);
+    setCurrentScreen("scenarioDetail");
   };
 
   const handleNavigateToWorkflow = (workflowId: string, workflowName: string, roleplayName?: string) => {
-    setLoadingMessage("Loading workflow...");
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      setCurrentWorkflow({
-        id: workflowId,
-        name: workflowName,
-        attachedRoleplay: roleplayName ? { id: "current", name: roleplayName } : undefined
-      });
-      setIsLoading(false);
-      setCurrentScreen("workflowDetail");
-    }, 600);
+    setCurrentWorkflow({
+      id: workflowId,
+      name: workflowName,
+      attachedRoleplay: roleplayName ? { id: "current", name: roleplayName } : undefined
+    });
+    setCurrentScreen("workflowDetail");
   };
 
   const handleNavigateFromWorkflowToRoleplay = (roleplayId: string) => {
-    setLoadingMessage("Loading roleplay...");
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      if (currentWorkflow) {
-        setAttachedWorkflow({ id: currentWorkflow.id, name: currentWorkflow.name });
-      }
-      setIsLoading(false);
-      setCurrentScreen("scenarioDetail");
-    }, 600);
+    if (currentWorkflow) {
+      setAttachedWorkflow({ id: currentWorkflow.id, name: currentWorkflow.name });
+    }
+    setCurrentScreen("scenarioDetail");
   };
 
   const handleCreateRoleplayFromWorkflow = (workflowId: string, workflowName: string) => {
     setAttachedWorkflow({ id: workflowId, name: workflowName });
-    navigateWithLoading("roleplay", "Opening builder...", 400);
+    setCurrentScreen("roleplay");
   };
 
   const handleAttachRoleplayToWorkflow = (roleplayId: string, roleplayName: string) => {
-    setLoadingMessage("Attaching roleplay...");
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      if (currentWorkflow) {
-        setCurrentWorkflow({
-          ...currentWorkflow,
-          attachedRoleplay: { id: roleplayId, name: roleplayName }
-        });
-        setAttachedRoleplays((prev) => {
-          if (prev.some((r) => r.workflowId === currentWorkflow.id)) {
-            return prev.map((r) => 
-              r.workflowId === currentWorkflow.id 
-                ? { ...r, scenarioTitle: roleplayName }
-                : r
-            );
-          }
-          return [
-            ...prev,
-            {
-              workflowId: currentWorkflow.id,
-              workflowName: currentWorkflow.name,
-              scenarioTitle: roleplayName,
-            },
-          ];
-        });
-      }
-      setIsLoading(false);
-    }, 600);
+    if (currentWorkflow) {
+      setCurrentWorkflow({
+        ...currentWorkflow,
+        attachedRoleplay: { id: roleplayId, name: roleplayName }
+      });
+      setAttachedRoleplays((prev) => {
+        if (prev.some((r) => r.workflowId === currentWorkflow.id)) {
+          return prev.map((r) => 
+            r.workflowId === currentWorkflow.id 
+              ? { ...r, scenarioTitle: roleplayName }
+              : r
+          );
+        }
+        return [
+          ...prev,
+          {
+            workflowId: currentWorkflow.id,
+            workflowName: currentWorkflow.name,
+            scenarioTitle: roleplayName,
+          },
+        ];
+      });
+    }
   };
 
   const handleNavigateToDashboard = () => {
-    navigateWithLoading("dashboard", "Loading workflows...", 400);
+    setCurrentScreen("dashboard");
   };
 
   const handleNavigateToRoleplay = () => {
-    navigateWithLoading("roleplay", "Opening builder...", 300);
+    setCurrentScreen("roleplay");
   };
 
   const handleNavigateToSimulation = () => {
-    navigateWithLoading("simulation", "Loading simulation...", 400);
+    setCurrentScreen("simulation");
   };
 
   const handleNavigateToCompetencies = () => {
     setIsSettingsOpen(false);
-    navigateWithLoading("competencies", "Loading competencies...", 500);
+    setCurrentScreen("competencies");
   };
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#fcfcfd] overflow-hidden">
-      {/* Loading Overlay */}
-      <AnimatePresence>
-        {isLoading && <LoadingOverlay message={loadingMessage} />}
-      </AnimatePresence>
-
       <div className="flex-1 flex overflow-hidden relative">
         <Sidebar 
           onNavigateToDashboard={handleNavigateToDashboard} 
