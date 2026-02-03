@@ -165,15 +165,28 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
   const [evaluationCriteria, setEvaluationCriteria] = useState<string[]>(["Empathy", "De-escalation", "Policy adherence"]);
   const [dropdownView, setDropdownView] = useState<"main" | "templates">("main");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [displayMode, setDisplayMode] = useState<"tags" | "underline">("tags");
+  const [displayMode, setDisplayMode] = useState<"tags" | "underline" | "minimal" | "code">("tags");
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Display modes for cycling
+  const displayModes: Array<"tags" | "underline" | "minimal" | "code"> = ["tags", "underline", "minimal", "code"];
+  const displayModeNames = {
+    tags: "Tags",
+    underline: "Underline", 
+    minimal: "Minimal",
+    code: "Code"
+  };
 
   // Keyboard shortcut for toggling display mode (Cmd/Ctrl + Shift + M)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "m") {
         e.preventDefault();
-        setDisplayMode(prev => prev === "tags" ? "underline" : "tags");
+        setDisplayMode(prev => {
+          const currentIndex = displayModes.indexOf(prev);
+          const nextIndex = (currentIndex + 1) % displayModes.length;
+          return displayModes[nextIndex];
+        });
       }
     };
 
@@ -578,8 +591,35 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
     const customerPersona = isCustomerFieldValue ? getCustomerPersona(value) : null;
     const ModalityIcon = isModalityField ? getModalityIcon(value) : null;
 
-    const tagModeClasses = "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
-    const underlineModeClasses = "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
+    const getModeClasses = () => {
+      switch (displayMode) {
+        case "tags":
+          return "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
+        case "underline":
+          return "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
+        case "minimal":
+          return "inline-flex items-center gap-[4px] px-[4px] py-[1px] bg-[#f8fafc] hover:bg-[#f1f5f9] rounded-[4px] transition-all";
+        case "code":
+          return "inline-flex items-center gap-[3px] px-[6px] py-[2px] bg-[#1e293b] hover:bg-[#334155] rounded-[4px] transition-all font-mono";
+        default:
+          return "";
+      }
+    };
+
+    const getTextClasses = () => {
+      switch (displayMode) {
+        case "tags":
+          return "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]";
+        case "underline":
+          return "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]";
+        case "minimal":
+          return "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[14px] text-nowrap text-[#475569]";
+        case "code":
+          return "font-['JetBrains_Mono',monospace] font-medium leading-[20px] text-[13px] text-nowrap text-[#22d3ee]";
+        default:
+          return "";
+      }
+    };
 
     return (
       <div className="relative inline-block" ref={dropdownRef}>
@@ -594,7 +634,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             setCustomInputField(null);
             setCustomInputValue("");
           }}
-          className={displayMode === "tags" ? tagModeClasses : underlineModeClasses}
+          className={getModeClasses()}
         >
           {displayMode === "tags" && isDifficultyField && (
             <DifficultyBars difficulty={value} size={14} />
@@ -620,12 +660,15 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
               </div>
             )
           )}
-          <span className={displayMode === "tags" 
-            ? "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]"
-            : "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]"
-          }>
+          {displayMode === "code" && (
+            <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#94a3b8]">"</span>
+          )}
+          <span className={getTextClasses()}>
             {value}
           </span>
+          {displayMode === "code" && (
+            <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#94a3b8]">"</span>
+          )}
         </button>
         {openDropdown === field && (
           <div className="absolute left-0 top-[calc(100%+4px)] bg-white rounded-[8px] shadow-[0px_4px_12px_rgba(0,0,0,0.15)] py-[4px] min-w-[200px] max-w-[400px] z-50">
@@ -839,8 +882,35 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
       }
     }, [openDropdown, fieldKey]);
 
-    const tagModeClasses = "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
-    const underlineModeClasses = "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
+    const getModeClasses = () => {
+      switch (displayMode) {
+        case "tags":
+          return "inline-flex items-center gap-[5px] px-[10px] py-[3px] rounded-full bg-white hover:bg-[#f9fafb] border border-[#d1d5db] hover:border-[#9ca3af] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)]";
+        case "underline":
+          return "inline-flex items-center gap-[5px] border-b border-dashed border-[#9ca3af] hover:border-[#6b7280] transition-all pb-[1px]";
+        case "minimal":
+          return "inline-flex items-center gap-[4px] px-[4px] py-[1px] bg-[#f8fafc] hover:bg-[#f1f5f9] rounded-[4px] transition-all";
+        case "code":
+          return "inline-flex items-center gap-[3px] px-[6px] py-[2px] bg-[#1e293b] hover:bg-[#334155] rounded-[4px] transition-all font-mono";
+        default:
+          return "";
+      }
+    };
+
+    const getTextClasses = () => {
+      switch (displayMode) {
+        case "tags":
+          return "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]";
+        case "underline":
+          return "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]";
+        case "minimal":
+          return "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[14px] text-nowrap text-[#475569]";
+        case "code":
+          return "font-['JetBrains_Mono',monospace] font-medium leading-[20px] text-[13px] text-nowrap text-[#a5f3fc]";
+        default:
+          return "";
+      }
+    };
 
     return (
       <div className="relative inline-block" ref={dropdownRef}>
@@ -855,14 +925,17 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
             setCustomInputField(null);
             setCustomInputValue("");
           }}
-          className={displayMode === "tags" ? tagModeClasses : underlineModeClasses}
+          className={getModeClasses()}
         >
-          <span className={displayMode === "tags"
-            ? "font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[15px] text-nowrap text-[#1f2937]"
-            : "font-['Inter:SemiBold',sans-serif] font-semibold leading-[20px] text-[15px] text-nowrap text-[#374151]"
-          }>
+          {displayMode === "code" && (
+            <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#94a3b8]">"</span>
+          )}
+          <span className={getTextClasses()}>
             {value}
           </span>
+          {displayMode === "code" && (
+            <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#94a3b8]">"</span>
+          )}
           {displayMode === "tags" && showRemove && onRemove && (
             <button
               onClick={(e) => {
@@ -1138,23 +1211,52 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
           <div aria-hidden="true" className="absolute border-[#ececf3] border-[1px_0px_0px] border-solid inset-0 pointer-events-none" />
           <div className="flex flex-col gap-[12px] items-start relative w-[590px] min-h-[500px]">
             {/* Tab Group - Left aligned above content */}
-            <div className="flex gap-[8px] items-center bg-white rounded-[8px] p-[4px] border border-[#ececf3] w-fit">
-              <motion.button
-                onClick={() => {}}
-                className="px-[16px] py-[8px] rounded-[6px] font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] text-[#3d3c52] bg-[#f0f0f0] transition-colors"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+            <div className="flex gap-[8px] items-center justify-between w-full">
+              <div className="flex gap-[8px] items-center bg-white rounded-[8px] p-[4px] border border-[#ececf3] w-fit">
+                <motion.button
+                  onClick={() => {}}
+                  className="px-[16px] py-[8px] rounded-[6px] font-['Inter:Semi_Bold',sans-serif] font-semibold text-[14px] text-[#3d3c52] bg-[#f0f0f0] transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Scenario builder
+                </motion.button>
+                <motion.button
+                  onClick={onSwitchToPrompt}
+                  className="px-[16px] py-[8px] rounded-[6px] font-['Inter:Medium',sans-serif] font-medium text-[14px] text-[#6b697b] hover:text-[#3d3c52] hover:bg-[#f5f5f5] transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Prompt
+                </motion.button>
+              </div>
+              
+              {/* Mode Indicator */}
+              <div 
+                className="flex items-center gap-[6px] px-[10px] py-[5px] rounded-[6px] bg-[#f8fafc] border border-[#e2e8f0] cursor-pointer hover:bg-[#f1f5f9] transition-colors"
+                onClick={() => {
+                  setDisplayMode(prev => {
+                    const currentIndex = displayModes.indexOf(prev);
+                    const nextIndex = (currentIndex + 1) % displayModes.length;
+                    return displayModes[nextIndex];
+                  });
+                }}
+                title="Click to switch mode (⌘+Shift+M)"
               >
-                Scenario builder
-              </motion.button>
-              <motion.button
-                onClick={onSwitchToPrompt}
-                className="px-[16px] py-[8px] rounded-[6px] font-['Inter:Medium',sans-serif] font-medium text-[14px] text-[#6b697b] hover:text-[#3d3c52] hover:bg-[#f5f5f5] transition-colors"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Prompt
-              </motion.button>
+                <span className="font-['Inter:Medium',sans-serif] font-medium text-[11px] text-[#64748b] uppercase tracking-wide">
+                  {displayModeNames[displayMode]}
+                </span>
+                <div className="flex gap-[3px]">
+                  {displayModes.map((mode) => (
+                    <div 
+                      key={mode}
+                      className={`w-[6px] h-[6px] rounded-full transition-colors ${
+                        mode === displayMode ? "bg-[#0975d7]" : "bg-[#cbd5e1]"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Scenario Details */}
@@ -1196,11 +1298,15 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                 <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">Evaluate on</span>
                 {evaluationCriteria.map((criterion, index) => (
                   <React.Fragment key={index}>
-                    {index > 0 && index === evaluationCriteria.length - 1 && (
+                    {/* Separator logic based on display mode */}
+                    {index > 0 && displayMode === "tags" && index === evaluationCriteria.length - 1 && (
                       <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">&</span>
                     )}
-                    {index > 0 && index < evaluationCriteria.length - 1 && displayMode === "underline" && (
+                    {index > 0 && (displayMode === "underline" || displayMode === "minimal") && (
                       <span className="font-['Inter:Regular',sans-serif] text-[15px] leading-[32px] text-[#4b5563]">,</span>
+                    )}
+                    {index > 0 && displayMode === "code" && (
+                      <span className="font-['JetBrains_Mono',monospace] text-[13px] text-[#64748b]">,</span>
                     )}
                     <CriteriaDropdown 
                       index={index} 
@@ -1210,7 +1316,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, 
                     />
                   </React.Fragment>
                 ))}
-                {displayMode === "tags" && (
+                {(displayMode === "tags" || displayMode === "minimal") && (
                   <button
                     onClick={handleAddCriteria}
                     className="inline-flex items-center justify-center size-[28px] rounded-full bg-[#f0f9ff] hover:bg-[#e0f2fe] border border-[#bae6fd] text-[#0369a1] transition-all"
