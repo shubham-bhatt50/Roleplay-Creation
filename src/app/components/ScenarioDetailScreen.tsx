@@ -883,16 +883,19 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                 <IconArrowRight className="size-4" stroke={2} />
               </button>
               {attachedWorkflow && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-[#e0f2fe] rounded text-xs text-[#0369a1]">
-                  <div className="w-2 h-2 rounded-full bg-[#0369a1]"></div>
+                <button 
+                  className="flex items-center gap-2 text-[13px] text-[#0975d7] hover:text-[#0861b8] hover:underline transition-colors"
+                  onClick={() => {
+                    // Navigate to workflow - for now just log
+                    console.log("Navigate to workflow:", attachedWorkflow.id);
+                  }}
+                >
+                  <div className="w-[6px] h-[6px] rounded-full bg-[#0975d7]"></div>
                   <span>{attachedWorkflow.name}</span>
-                </div>
+                </button>
               )}
             </div>
           </div>
-
-          {/* Author */}
-          <p className="text-sm text-[#8d8ba7] mt-2">By Sarah Johnson</p>
         </div>
 
         {/* Content Area */}
