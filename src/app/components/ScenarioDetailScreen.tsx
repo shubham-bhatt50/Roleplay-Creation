@@ -2147,7 +2147,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                 </div>
 
                 <div className="flex-1 min-h-0 overflow-y-auto py-6 px-6">
-                  <div className="max-w-2xl mx-auto space-y-3">
+                  <div className="max-w-4xl mx-auto space-y-3">
                     {exitConditions.map((condition, index) => {
                       const Icon = getExitConditionIcon(condition.icon);
                       const isEditingTrigger = editingExitCondition?.id === condition.id && editingExitCondition?.field === "trigger";
@@ -2205,7 +2205,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                                     setEditingExitCondition({ id: condition.id, field: "trigger" });
                                     setExitConditionEditValue(condition.trigger);
                                   }}
-                                  className="text-sm text-[#2b2b40] cursor-text hover:text-[#0975d7] transition-colors truncate"
+                                  className="text-sm text-[#2b2b40] cursor-text hover:text-[#0975d7] transition-colors"
                                 >
                                   {condition.trigger}
                                 </span>
@@ -2216,7 +2216,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                             <IconArrowRight className="shrink-0 w-4 h-4 text-[#c5c5c5]" stroke={2} />
 
                             {/* Action text */}
-                            <div className="flex items-center gap-2 min-w-0" style={{ width: '200px' }}>
+                            <div className="flex items-center gap-2 shrink-0">
                               <span className="text-xs font-semibold text-[#8d8ba7] uppercase tracking-wide shrink-0">Then</span>
                               {isEditingAction ? (
                                 <input
@@ -2249,7 +2249,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                                     setEditingExitCondition({ id: condition.id, field: "action" });
                                     setExitConditionEditValue(condition.action);
                                   }}
-                                  className="text-sm text-[#2b2b40] cursor-text hover:text-[#0975d7] transition-colors truncate"
+                                  className="text-sm text-[#2b2b40] cursor-text hover:text-[#0975d7] transition-colors"
                                 >
                                   {condition.action}
                                 </span>
