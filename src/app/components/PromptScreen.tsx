@@ -75,9 +75,9 @@ export function PromptScreen({ onBack, onSwitchToBuilder, onGenerateScenario }: 
 
 
         {/* Content */}
-        <div className="flex-1 flex flex-col items-center pt-[60px] w-full relative">
+        <div className="flex-1 flex flex-col items-center justify-center w-full relative">
           <div aria-hidden="true" className="absolute border-[#ececf3] border-[1px_0px_0px] border-solid inset-0 pointer-events-none" />
-          <div className="flex flex-col gap-[12px] items-start relative w-[590px]">
+          <div className="flex flex-col gap-[12px] items-start relative w-[590px] min-h-[500px]">
             {/* Tab Group - Left aligned above content */}
             <div className="flex gap-[8px] items-center bg-white rounded-[8px] p-[4px] border border-[#ececf3] w-fit">
               <motion.button

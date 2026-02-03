@@ -315,7 +315,7 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
     );
   };
 
-const handleCustomSubmit = (field: string) => {
+  const handleCustomSubmit = (field: string) => {
     if (customInputValue.trim()) {
       if (field.startsWith("criteria_")) {
         const index = parseInt(field.replace("criteria_", ""));
@@ -323,7 +323,7 @@ const handleCustomSubmit = (field: string) => {
         newCriteria[index] = customInputValue.trim();
         setEvaluationCriteria(newCriteria);
       } else {
-        setValues({ ...values, [field]: customInputValue.trim() });
+      setValues({ ...values, [field]: customInputValue.trim() });
       }
       setOpenDropdown(null);
       setCustomInputField(null);
@@ -544,9 +544,9 @@ const handleCustomSubmit = (field: string) => {
                 field={field}
                 onSubmit={() => handleCustomSubmit(field)}
                 onCancel={() => {
-                  setCustomInputField(null);
-                  setCustomInputValue("");
-                }}
+                      setCustomInputField(null);
+                      setCustomInputValue("");
+                    }}
               />
             ) : (
               <>
@@ -561,9 +561,9 @@ const handleCustomSubmit = (field: string) => {
                       <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#6b697b] text-[13px]">
                         Back to personas
                       </p>
-                    </button>
+                  </button>
                     {personaTemplates.map((template) => (
-                      <button
+                  <button
                         key={template.id}
                         className="flex items-center gap-[12px] px-[16px] py-[10px] w-full hover:bg-[#f0f9ff] transition-colors text-left"
                         onClick={() => {
@@ -573,7 +573,7 @@ const handleCustomSubmit = (field: string) => {
                       >
                         <div className="w-[32px] h-[32px] rounded-[6px] bg-[#e0f2fe] flex-shrink-0 flex items-center justify-center">
                           <IconFileText className="size-[16px] text-[#0369a1]" stroke={1.5} />
-                        </div>
+                </div>
                         <div className="flex flex-col items-start">
                           <p className="font-['Inter:Medium',sans-serif] font-medium leading-[20px] text-[#0369a1] text-[14px]">
                             {template.name}
@@ -581,7 +581,7 @@ const handleCustomSubmit = (field: string) => {
                           <p className="font-['Inter:Regular',sans-serif] leading-[16px] text-[#6b697b] text-[12px] mt-[2px]">
                             {template.customerName} • {template.emotion}
                           </p>
-                        </div>
+              </div>
                       </button>
                     ))}
                   </>
@@ -693,16 +693,16 @@ const handleCustomSubmit = (field: string) => {
                 }
                 
                 return (
-                        <button
-                          key={index}
-                          className="flex items-center px-[16px] py-[10px] w-full hover:bg-[#f5f5f5] transition-colors text-left"
-                          onClick={() => handleSelect(field, option)}
-                        >
-                          <p className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px]">
-                            {option}
-                          </p>
-                        </button>
-                      );
+                  <button
+                    key={index}
+                    className="flex items-center px-[16px] py-[10px] w-full hover:bg-[#f5f5f5] transition-colors text-left"
+                    onClick={() => handleSelect(field, option)}
+                  >
+                    <p className="font-['Inter:Regular',sans-serif] leading-[20px] text-[#3d3c52] text-[14px]">
+                      {option}
+                    </p>
+                  </button>
+                );
                     })}
                   </>
                 )}
@@ -884,9 +884,9 @@ const handleCustomSubmit = (field: string) => {
 
 
         {/* Content */}
-        <div className="flex-1 flex flex-col items-center pt-[60px] w-full relative">
+        <div className="flex-1 flex flex-col items-center justify-center w-full relative">
           <div aria-hidden="true" className="absolute border-[#ececf3] border-[1px_0px_0px] border-solid inset-0 pointer-events-none" />
-          <div className="flex flex-col gap-[12px] items-start relative w-[590px]">
+          <div className="flex flex-col gap-[12px] items-start relative w-[590px] min-h-[500px]">
             {/* Tab Group - Left aligned above content */}
             <div className="flex gap-[8px] items-center bg-white rounded-[8px] p-[4px] border border-[#ececf3] w-fit">
               <motion.button
