@@ -128,6 +128,7 @@ interface ScenarioBuilderProps {
     modality: string;
     difficulty: string;
   }) => void;
+  onNavigateToDetail?: (roleplayId: string) => void;
 }
 
 interface CustomerPersona {
@@ -142,7 +143,7 @@ interface CustomerPersona {
   likelyBehaviour?: string;
 }
 
-export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }: ScenarioBuilderProps) {
+export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario, onNavigateToDetail }: ScenarioBuilderProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [customInputField, setCustomInputField] = useState<string | null>(null);
   const [customInputValue, setCustomInputValue] = useState("");
@@ -973,6 +974,12 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
               {existingRoleplays.map((roleplay) => (
                 <div
                   key={roleplay.id}
+                  onClick={() => {
+                    if (onNavigateToDetail) {
+                      setIsSidebarOpen(false);
+                      onNavigateToDetail(roleplay.id);
+                    }
+                  }}
                   className="px-[20px] py-[16px] border-b border-[#f3f4f6] hover:bg-[#f9fafb] transition-colors cursor-pointer group"
                 >
                   <div className="flex items-start justify-between gap-[12px]">
@@ -1013,7 +1020,10 @@ export function ScenarioBuilder({ onBack, onSwitchToPrompt, onGenerateScenario }
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-[4px] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div 
+                      className="flex items-center gap-[4px] opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button className="p-[6px] rounded-[4px] hover:bg-[#e5e7eb] transition-colors" title="Preview">
                         <IconPlayerPlay className="size-[16px] text-[#6b7280]" stroke={1.5} />
                       </button>

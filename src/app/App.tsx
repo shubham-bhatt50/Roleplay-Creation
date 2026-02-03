@@ -63,6 +63,25 @@ export default function App() {
     setCurrentScreen("dashboard");
   };
 
+  const handleNavigateToDetail = (roleplayId: string) => {
+    // Create scenario data from roleplay ID (in a real app, you'd fetch this)
+    // For now, we'll use default data
+    const defaultScenarioData: ScenarioData = {
+      trainee: "Customer support executives",
+      customerName: "Alex",
+      emotion: "Frustrated",
+      scenario: "they want a full refund for a product they bought",
+      objective: "De-escalate the situation",
+      criteria1: "Empathy",
+      criteria2: "De-escalation",
+      criteria3: "Policy adherence",
+      modality: "Audio",
+      difficulty: "High"
+    };
+    setScenarioData(defaultScenarioData);
+    setCurrentScreen("scenarioDetail");
+  };
+
   return (
     <div className="h-screen w-screen flex flex-col bg-[#fcfcfd] overflow-hidden">
       {/* Preliminary Exploration Banner */}
@@ -101,6 +120,7 @@ export default function App() {
               onBack={() => setCurrentScreen("dashboard")} 
               onSwitchToPrompt={() => setCurrentScreen("prompt")}
               onGenerateScenario={handleGenerateScenario}
+              onNavigateToDetail={handleNavigateToDetail}
             />
           )}
           {currentScreen === "prompt" && (
@@ -109,6 +129,7 @@ export default function App() {
               onBack={() => setCurrentScreen("dashboard")}
               onSwitchToBuilder={() => setCurrentScreen("roleplay")}
               onGenerateScenario={handleGenerateScenario}
+              onNavigateToDetail={handleNavigateToDetail}
             />
           )}
           {currentScreen === "scenarioDetail" && (
