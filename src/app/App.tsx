@@ -45,12 +45,22 @@ export default function App() {
   const [scenarioData, setScenarioData] = useState<ScenarioData | null>(null);
   const [attachedWorkflow, setAttachedWorkflow] = useState<{ id: string; name: string } | null>(null);
   const [currentWorkflow, setCurrentWorkflow] = useState<{ id: string; name: string; attachedRoleplay?: { id: string; name: string } } | null>(null);
+  const [initialPrompt, setInitialPrompt] = useState<string>("");
+
   const handleGenerateScenario = (data: ScenarioData) => {
     setScenarioData(data);
+    setInitialPrompt(""); // Clear any prompt when using builder
     // Simulate AI generation time
     setTimeout(() => {
       setCurrentScreen("scenarioDetail");
     }, 2000);
+  };
+
+  // Handler for prompt-based scenario generation
+  const handleGenerateFromPrompt = (prompt: string) => {
+    setInitialPrompt(prompt);
+    setScenarioData(null); // Let the AI analyze and fill in
+    setCurrentScreen("scenarioDetail");
   };
 
   const handleAttachWorkflow = (workflowId: string, workflowName: string) => {
@@ -215,7 +225,7 @@ export default function App() {
               <PromptScreen 
                 onBack={handleNavigateToDashboard}
                 onSwitchToBuilder={() => setCurrentScreen("roleplay")}
-                onGenerateScenario={handleGenerateScenario}
+                onGenerateScenario={handleGenerateFromPrompt}
                 onNavigateToDetail={handleNavigateToDetail}
               />
             </motion.div>
@@ -235,6 +245,7 @@ export default function App() {
                 scenarioData={scenarioData}
                 attachedWorkflow={attachedWorkflow}
                 onNavigateToWorkflow={handleNavigateToWorkflow}
+                initialPrompt={initialPrompt}
               />
             </motion.div>
           )}

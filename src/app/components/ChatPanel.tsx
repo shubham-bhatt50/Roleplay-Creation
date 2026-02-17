@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { IconSparkles, IconSend, IconCheck, IconX, IconEye } from "@tabler/icons-react";
+import { analyzePrompt, PromptAnalysisResult } from "../utils/promptAnalyzer";
 
 type PendingChange = {
   id: string;
@@ -15,31 +16,79 @@ type ChatMessageType = {
   content: string;
   timestamp: Date;
   pendingChangeId?: string; // Links to a pending change
+  isMarkdown?: boolean; // For rich formatting
 };
 
 interface ChatPanelProps {
   activeTab: string;
   editorContent?: string;
+  initialPrompt?: string; // The prompt user entered on the landing page
+  promptAnalysis?: PromptAnalysisResult; // Analysis of the initial prompt
   onPreviewChange?: (originalContent: string, proposedContent: string) => void;
   onAcceptChange?: (proposedContent: string) => void;
   onRejectChange?: () => void;
+  onUpdateScenario?: (field: string, value: string) => void; // For updating scenario based on chat
+  onClose?: () => void; // For closing the sidebar
 }
 
 export function ChatPanel({ 
   activeTab, 
   editorContent = "",
+  initialPrompt,
+  promptAnalysis,
   onPreviewChange,
   onAcceptChange,
-  onRejectChange 
+  onRejectChange,
+  onUpdateScenario,
+  onClose
 }: ChatPanelProps) {
+  // Generate initial greeting based on prompt analysis
+  const getInitialGreeting = (): string => {
+    if (promptAnalysis) {
+      return promptAnalysis.aiGreeting;
+    }
+    return "Hi! I can help you edit this scenario. Try asking me to modify the content, change the tone, or add new details.";
+  };
+
   const [messages, setMessages] = useState<ChatMessageType[]>([
     {
       id: "1",
       role: "assistant",
-      content: "Hi! I can help you edit this scenario. Try asking me to modify the content, change the tone, or add new details.",
+      content: getInitialGreeting(),
       timestamp: new Date(),
+      isMarkdown: true,
     },
   ]);
+  
+  // Track if we've shown the initial prompt context
+  const [hasShownInitialPrompt, setHasShownInitialPrompt] = useState(false);
+  
+  // Show user's initial prompt as first message if provided
+  useEffect(() => {
+    if (initialPrompt && !hasShownInitialPrompt && initialPrompt.trim().length > 0) {
+      const analysis = promptAnalysis || analyzePrompt(initialPrompt);
+      
+      // Only show if it's not vague/empty
+      if (analysis.quality !== "vague" && analysis.quality !== "empty") {
+        setMessages([
+          {
+            id: "user-initial",
+            role: "user",
+            content: initialPrompt,
+            timestamp: new Date(Date.now() - 1000), // 1 second before AI response
+          },
+          {
+            id: "1",
+            role: "assistant",
+            content: analysis.aiGreeting,
+            timestamp: new Date(),
+            isMarkdown: true,
+          },
+        ]);
+      }
+      setHasShownInitialPrompt(true);
+    }
+  }, [initialPrompt, promptAnalysis, hasShownInitialPrompt]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
@@ -209,6 +258,51 @@ export function ChatPanel({
     }
   };
 
+  // Simple markdown parser for bold and bullet points
+  const renderFormattedContent = (content: string, isMarkdown?: boolean) => {
+    if (!isMarkdown) return content;
+    
+    // Split by newlines to handle line breaks
+    const lines = content.split('\n');
+    
+    return lines.map((line, lineIndex) => {
+      // Handle bullet points
+      const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
+      const bulletContent = isBullet ? line.trim().substring(1).trim() : line;
+      
+      // Handle bold text with **
+      const parts = (isBullet ? bulletContent : line).split(/(\*\*[^*]+\*\*)/g);
+      const formattedParts = parts.map((part, partIndex) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={partIndex}>{part.slice(2, -2)}</strong>;
+        }
+        return part;
+      });
+      
+      if (isBullet) {
+        return (
+          <div key={lineIndex} className="flex gap-2 ml-1">
+            <span>•</span>
+            <span>{formattedParts}</span>
+          </div>
+        );
+      }
+      
+      // Handle numbered lists (1. 2. 3.)
+      const numberedMatch = line.match(/^(\d+)\.\s/);
+      if (numberedMatch) {
+        return (
+          <div key={lineIndex} className="flex gap-2 ml-1">
+            <span>{numberedMatch[1]}.</span>
+            <span>{formattedParts}</span>
+          </div>
+        );
+      }
+      
+      return <div key={lineIndex}>{formattedParts}</div>;
+    });
+  };
+
   const renderMessageWithActions = (message: ChatMessageType) => {
     const pendingChange = message.pendingChangeId ? pendingChanges.get(message.pendingChangeId) : null;
     
@@ -222,7 +316,7 @@ export function ChatPanel({
               : "bg-[#f5f5f5] text-[#2b2b40] rounded-bl-sm"
           }`}
         >
-          {message.content}
+          {message.isMarkdown ? renderFormattedContent(message.content, true) : message.content}
         </div>
       );
     }
@@ -305,7 +399,7 @@ export function ChatPanel({
   };
 
   return (
-    <div className="w-[320px] h-full border-l border-[#eee] bg-white flex flex-col shrink-0">
+    <div className="w-[380px] h-full border-l border-[#eee] bg-white flex flex-col shrink-0">
       {/* Header - matches main page header height */}
       <div className="px-4 border-b border-[#eee] flex items-center gap-2 shrink-0 h-[70px]">
         <div className="text-[#0975d7]">
@@ -317,6 +411,15 @@ export function ChatPanel({
         <p className="text-xs text-[#8d8ba7] ml-auto capitalize">
           Editing: {getTabLabel(activeTab)}
         </p>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-[#f5f5f5] rounded-lg transition-colors ml-2"
+            title="Close chat sidebar"
+          >
+            <IconX className="w-4 h-4 text-[#8d8ba7]" stroke={2} />
+          </button>
+        )}
       </div>
 
       {/* Messages */}

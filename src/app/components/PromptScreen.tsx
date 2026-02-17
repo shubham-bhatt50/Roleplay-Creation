@@ -73,7 +73,7 @@ const existingRoleplays = [
 interface PromptScreenProps {
   onBack: () => void;
   onSwitchToBuilder: () => void;
-  onGenerateScenario: () => void;
+  onGenerateScenario: (prompt: string) => void;
   onNavigateToDetail?: (roleplayId: string, workflow?: { id: string; name: string } | null) => void;
 }
 
@@ -114,7 +114,7 @@ export function PromptScreen({ onBack, onSwitchToBuilder, onGenerateScenario, on
       setIsGenerating(true);
       // Simulate loading time before navigating
       setTimeout(() => {
-        onGenerateScenario();
+        onGenerateScenario(promptText.trim());
       }, 2000); // 2 second delay
     }
   };

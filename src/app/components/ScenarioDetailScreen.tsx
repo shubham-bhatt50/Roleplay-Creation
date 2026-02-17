@@ -1,10 +1,11 @@
 import svgPaths from "@/imports/svg-t7e50z2hox";
 import imgAlexJonathan from "@/assets/Alex.png";
-import { IconPencil, IconEye, IconArrowRight, IconArrowLeft, IconFileText, IconUser, IconClipboardCheck, IconDoorExit, IconSettings, IconX, IconPlus, IconPhoto, IconMoodAngry, IconMoodSad, IconMoodHappy, IconMoodNeutral, IconAlertCircle, IconClock, IconFlame, IconUsers, IconChevronDown, IconTrash, IconCheck, IconPlayerStop, IconPhoneOff, IconUserUp, IconTimeDuration10, IconSearch, IconDeviceFloppy, IconDownload, IconUserPlus, IconArrowUpRight } from "@tabler/icons-react";
+import { IconPencil, IconEye, IconArrowRight, IconArrowLeft, IconFileText, IconUser, IconClipboardCheck, IconDoorExit, IconSettings, IconX, IconPlus, IconPhoto, IconMoodAngry, IconMoodSad, IconMoodHappy, IconMoodNeutral, IconAlertCircle, IconClock, IconFlame, IconUsers, IconChevronDown, IconTrash, IconCheck, IconPlayerStop, IconPhoneOff, IconUserUp, IconTimeDuration10, IconSearch, IconDeviceFloppy, IconDownload, IconUserPlus, IconArrowUpRight, IconSparkles } from "@tabler/icons-react";
 import { ChatPanel } from "./ChatPanel";
 import { EditorChangePreview } from "./EditorChangePreview";
 import { DiffPreview } from "./DiffPreview";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { analyzePrompt, PromptAnalysisResult } from "../utils/promptAnalyzer";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -30,6 +31,20 @@ interface ScenarioDetailScreenProps {
   scenarioData?: ScenarioData | null;
   attachedWorkflow?: { id: string; name: string } | null;
   onNavigateToWorkflow?: (workflowId: string, workflowName: string, roleplayName?: string) => void;
+  initialPrompt?: string;
+}
+
+// Placeholder content component for incomplete prompts
+function TabPlaceholder({ icon: Icon, title, description }: { icon: React.ComponentType<{ className?: string; stroke?: number }>; title: string; description: string }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <div className="w-16 h-16 rounded-full bg-[#f5f5f5] flex items-center justify-center mb-4">
+        <Icon className="w-8 h-8 text-[#8d8ba7]" stroke={1.5} />
+      </div>
+      <h3 className="text-lg font-medium text-[#3d3c52] mb-2">{title}</h3>
+      <p className="text-sm text-[#8d8ba7] max-w-md">{description}</p>
+    </div>
+  );
 }
 
 type TabType = "scenario" | "persona" | "evaluation" | "exit" | "settings";
@@ -45,12 +60,30 @@ const availableWorkflows = [
   { id: "7", name: "Update payment | Billing system", type: "Workflow" },
 ];
 
-export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, attachedWorkflow, onNavigateToWorkflow }: ScenarioDetailScreenProps) {
+export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, attachedWorkflow, onNavigateToWorkflow, initialPrompt }: ScenarioDetailScreenProps) {
   const [activeTab, setActiveTab] = useState<TabType>("scenario");
   const [activeMode, setActiveMode] = useState<"voice" | "chat" | "hybrid">("voice");
+  const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(true);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
+  
+  // Analyze the initial prompt if provided
+  const promptAnalysis = useMemo<PromptAnalysisResult | null>(() => {
+    if (!initialPrompt) return null;
+    return analyzePrompt(initialPrompt);
+  }, [initialPrompt]);
+  
+  // Determine if we should show placeholder content (prompt is incomplete and no scenarioData)
+  const shouldShowPlaceholder = !!(
+    initialPrompt && 
+    !scenarioData && 
+    promptAnalysis && 
+    (promptAnalysis.quality === "partial" || promptAnalysis.quality === "vague" || promptAnalysis.quality === "empty")
+  );
+  
   const getDefaultTitle = (data: ScenarioData | null | undefined): string => {
+    // If we have an incomplete prompt, show draft title
+    if (shouldShowPlaceholder) return "New scenario (draft)";
     if (!data) return "Dealing with angry customer for refund scenario";
     return `${data.customerName} - ${data.emotion} customer scenario`;
   };
@@ -65,9 +98,17 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
 
   // Generate detailed scenario content based on scenario data
   const generateScenarioContent = (data: ScenarioData | null | undefined): string => {
+    // If prompt is incomplete, show placeholder content
+    if (shouldShowPlaceholder) {
+      return `
+        <p class="text-[#8d8ba7] italic">The scenario content will appear here once you provide more details in the chat.</p>
+        
+        <p class="text-[#8d8ba7] italic">Use the AI assistant on the right to describe your scenario, and I'll help you build it step by step.</p>
+      `;
+    }
+    
     if (!data) {
       return `
-      <h2>Scenario</h2>
       <p>You are <strong>Alex</strong>, a customer who is <strong>frustrated</strong> and contacting customer support because you want a full refund for a product you recently bought. You expect a quick resolution and are feeling upset about the situation.</p>
       
       <p>Your emotional state is <strong>frustrated</strong>, which means you may express your concerns with some intensity. You should communicate your need for a full refund clearly and firmly, while also expressing your dissatisfaction with the product or service you received.</p>
@@ -781,6 +822,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
       }),
     ],
     content: generateScenarioContent(scenarioData),
+    editable: !shouldShowPlaceholder, // Disable editing when showing placeholder
     editorProps: {
       attributes: {
         class: 'focus:outline-none prose prose-sm max-w-none',
@@ -797,6 +839,13 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
       }
     }
   }, [scenarioData, editor]);
+
+  // Update editor editable state when shouldShowPlaceholder changes
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!shouldShowPlaceholder);
+    }
+  }, [shouldShowPlaceholder, editor]);
 
   // Sync persona changes with scenario content
   useEffect(() => {
@@ -852,18 +901,23 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
       {/* AI Chat Panel - Fixed Right Sidebar */}
-      <div className="absolute top-0 right-0 bottom-0 w-[320px] border-l border-[#eee] z-10">
-        <ChatPanel 
-          activeTab={activeTab}
-          editorContent={getCurrentEditorContent()}
-          onPreviewChange={handlePreviewChange}
-          onAcceptChange={handleAcceptChange}
-          onRejectChange={handleRejectChange}
-        />
-      </div>
+      {isChatSidebarOpen && (
+        <div className="absolute top-0 right-0 bottom-0 w-[380px] border-l border-[#eee] z-10">
+          <ChatPanel 
+            activeTab={activeTab}
+            editorContent={getCurrentEditorContent()}
+            initialPrompt={initialPrompt}
+            promptAnalysis={promptAnalysis || undefined}
+            onPreviewChange={handlePreviewChange}
+            onAcceptChange={handleAcceptChange}
+            onRejectChange={handleRejectChange}
+            onClose={() => setIsChatSidebarOpen(false)}
+          />
+        </div>
+      )}
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden pr-[320px]">
+      <div className={`flex-1 flex flex-col bg-white min-h-0 overflow-hidden ${isChatSidebarOpen ? 'pr-[380px]' : ''}`}>
         {/* Header */}
         <div className="border-b border-[#eee] px-6 py-4">
           <div className="flex items-start justify-between">
@@ -922,6 +976,16 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
+              {/* AI Assistant Toggle */}
+              {!isChatSidebarOpen && (
+                <button 
+                  className="flex items-center gap-2 px-3 py-2 border border-[#e5e5ea] text-[#2b2b40] rounded-lg hover:bg-[#f5f5f7] hover:border-[#0975d7] transition-colors text-sm font-medium"
+                  onClick={() => setIsChatSidebarOpen(true)}
+                >
+                  <IconSparkles className="w-4 h-4 text-[#0975d7]" stroke={2} />
+                  AI assistant
+                </button>
+              )}
               {/* Attach/Update Button */}
               <button 
                 className="bg-[#d0450b] hover:bg-[#b83d0a] text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2"
@@ -1013,13 +1077,6 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
           <div className="flex-1 flex flex-col overflow-hidden">
             {activeTab === "scenario" && (
               <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="border-b border-[#eee] py-4 shrink-0">
-                  <div className="px-6">
-                    <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Scenario</h2>
-                    <p className="text-sm text-[#8d8ba7]">Define the situation learners will practice</p>
-                  </div>
-                </div>
-
                 {/* Formatting Toolbar */}
                 <div className="bg-white border-b border-[#eee] py-2 shrink-0">
                   <div className="px-6 flex items-center gap-2">
@@ -1182,13 +1239,19 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
             )}
 
             {activeTab === "persona" && (
+              shouldShowPlaceholder ? (
+                <TabPlaceholder 
+                  icon={IconUser}
+                  title="Customer persona not yet defined"
+                  description="Use the AI assistant to describe your scenario. Once you provide more details, the customer persona will be generated automatically."
+                />
+              ) : (
               <div className="flex-1 flex flex-col overflow-y-auto">
-                <div className="border-b border-[#eee] py-4 shrink-0">
-                  <div className="px-6 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Customer persona</h2>
-                      <p className="text-sm text-[#8d8ba7]">Define who the learner is interacting with</p>
-                    </div>
+                {/* Persona Card */}
+                <div className="bg-gradient-to-br from-[#fafbfc] to-white border-b border-[#eee] py-6">
+                  <div className="px-6">
+                    {/* Action buttons row */}
+                    <div className="flex justify-end mb-4">
                     {/* Combined Persona Menu */}
                     <div className="relative">
                       <button
@@ -1416,12 +1479,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                         </>
                       )}
                     </div>
-                  </div>
-                </div>
-
-                {/* Persona Card */}
-                <div className="bg-gradient-to-br from-[#fafbfc] to-white border-b border-[#eee] py-6">
-                  <div className="px-6">
+                    </div>
                     {/* Top Row: Avatar + Name/Demographics */}
                     <div className="flex items-center gap-5 mb-5">
                     {/* Avatar */}
@@ -1739,17 +1797,22 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                   </div>
                 </div>
               </div>
+              )
             )}
 
             {activeTab === "evaluation" && (
+              shouldShowPlaceholder ? (
+                <TabPlaceholder 
+                  icon={IconClipboardCheck}
+                  title="Evaluation criteria not yet defined"
+                  description="Use the AI assistant to describe your scenario. Evaluation criteria will be generated based on the training objectives you specify."
+                />
+              ) : (
               <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="border-b border-[#eee] py-4 shrink-0">
-                  <div className="px-6 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Evaluation</h2>
-                      <p className="text-sm text-[#8d8ba7]">Select competencies to assess</p>
-                    </div>
-                    <div className="flex items-center gap-2">
+                {/* Evaluation Parameters */}
+                <div className="flex-1 overflow-y-auto">
+                  {/* Action buttons row - inside scrollable content */}
+                  <div className="px-6 py-4 flex items-center justify-end gap-2">
                       {/* Show either save controls OR normal controls, not both */}
                       {hasEvaluationChanges ? (
                         <div className="flex items-center gap-2">
@@ -1949,12 +2012,8 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                         <IconPlus className="w-4 h-4" stroke={2} />
                         Add evaluation parameter
                       </button>
-                    </div>
                   </div>
-                </div>
 
-                {/* Evaluation Parameters */}
-                <div className="flex-1 overflow-y-auto">
                   {evaluationParameters.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <div className="w-12 h-12 rounded-xl bg-[#f3f4f6] flex items-center justify-center mb-3">
@@ -2174,27 +2233,29 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                   )}
                 </div>
               </div>
+              )
             )}
 
             {activeTab === "exit" && (
+              shouldShowPlaceholder ? (
+                <TabPlaceholder 
+                  icon={IconDoorExit}
+                  title="Exit conditions not yet defined"
+                  description="Use the AI assistant to describe your scenario. Exit conditions will be generated to define when the roleplay should conclude."
+                />
+              ) : (
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
-                <div className="border-b border-[#eee] py-4 shrink-0">
-                  <div className="px-6 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#2b2b40] mb-1">Exit conditions</h2>
-                      <p className="text-sm text-[#8d8ba7]">Define when the scenario should end</p>
-                    </div>
+                <div className="flex-1 min-h-0 overflow-y-auto py-6 px-6">
+                  {/* Action button inside content */}
+                  <div className="flex justify-end mb-4">
                     <button
                       onClick={addExitCondition}
-                      className="flex items-center gap-2 px-4 py-2 border border-[#e5e5ea] text-[#2b2b40] rounded-lg hover:bg-[#f5f5f7] transition-colors text-sm font-medium"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#0975d7] text-white rounded-lg hover:bg-[#0861b8] transition-colors text-sm font-medium"
                     >
                       <IconPlus className="w-4 h-4" stroke={2} />
                       Add condition
                     </button>
                   </div>
-                </div>
-
-                <div className="flex-1 min-h-0 overflow-y-auto py-6 px-6">
                   <div className="max-w-4xl mx-auto space-y-3">
                     {exitConditions.map((condition, index) => {
                       const Icon = getExitConditionIcon(condition.trigger);
@@ -2338,6 +2399,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                   )}
                 </div>
               </div>
+              )
             )}
           </div>
                   </div>
