@@ -1,6 +1,9 @@
 import svgPaths from "@/imports/svg-t7e50z2hox";
 import imgAlexJonathan from "@/assets/Alex.png";
 import { IconPencil, IconEye, IconArrowRight, IconArrowLeft, IconFileText, IconUser, IconClipboardCheck, IconDoorExit, IconSettings, IconX, IconPlus, IconPhoto, IconMoodAngry, IconMoodSad, IconMoodHappy, IconMoodNeutral, IconAlertCircle, IconClock, IconFlame, IconUsers, IconChevronDown, IconTrash, IconCheck, IconPlayerStop, IconPhoneOff, IconUserUp, IconTimeDuration10, IconSearch, IconDeviceFloppy, IconDownload, IconUserPlus, IconArrowUpRight } from "@tabler/icons-react";
+import { ChatPanel } from "./ChatPanel";
+import { EditorChangePreview } from "./EditorChangePreview";
+import { DiffPreview } from "./DiffPreview";
 import { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -54,6 +57,11 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
 
   const [scenarioTitle, setScenarioTitle] = useState(getDefaultTitle(scenarioData));
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  
+  // AI Change Preview State
+  const [isPreviewingChanges, setIsPreviewingChanges] = useState(false);
+  const [originalContent, setOriginalContent] = useState<string>("");
+  const [proposedContent, setProposedContent] = useState<string>("");
 
   // Generate detailed scenario content based on scenario data
   const generateScenarioContent = (data: ScenarioData | null | undefined): string => {
@@ -811,10 +819,51 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
     }
   }, [currentPersona?.name, currentPersona?.emotionalStates, currentPersona?.gender, currentPersona?.age, currentPersona?.location]);
 
+  // AI Change Preview Handlers
+  const handlePreviewChange = (original: string, proposed: string) => {
+    setOriginalContent(editor?.getHTML() || "");
+    setProposedContent(proposed);
+    setIsPreviewingChanges(true);
+    // Don't apply to editor yet - show diff preview instead
+  };
+
+  const handleAcceptChange = (proposed: string) => {
+    // Apply the proposed content to the editor
+    if (editor) {
+      editor.commands.setContent(proposed);
+    }
+    setIsPreviewingChanges(false);
+    setOriginalContent("");
+    setProposedContent("");
+  };
+
+  const handleRejectChange = () => {
+    // Just exit preview mode - original content is still in editor
+    setIsPreviewingChanges(false);
+    setOriginalContent("");
+    setProposedContent("");
+  };
+
+  // Get current editor content for the chat panel
+  const getCurrentEditorContent = (): string => {
+    return editor?.getHTML() || "";
+  };
+
   return (
-    <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+    <div className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
+      {/* AI Chat Panel - Fixed Right Sidebar */}
+      <div className="absolute top-0 right-0 bottom-0 w-[320px] border-l border-[#eee] z-10">
+        <ChatPanel 
+          activeTab={activeTab}
+          editorContent={getCurrentEditorContent()}
+          onPreviewChange={handlePreviewChange}
+          onAcceptChange={handleAcceptChange}
+          onRejectChange={handleRejectChange}
+        />
+      </div>
+      
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden pr-[320px]">
         {/* Header */}
         <div className="border-b border-[#eee] px-6 py-4">
           <div className="flex items-start justify-between">
@@ -892,85 +941,70 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Navigation */}
-          <div className="w-[240px] border-r border-[#eee] bg-white flex flex-col relative">
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-[#8d8ba7] px-4 pt-4 pb-3">CONTEXT</p>
-              <div className="space-y-1">
-                <button
-                  onClick={() => setActiveTab("scenario")}
-                  className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 relative ${
-                    activeTab === "scenario"
-                      ? "bg-[#f0f0f5] text-[#0975d7]"
-                      : "text-[#8d8ba7] hover:bg-gray-50"
-                  }`}
-                >
-                  {activeTab === "scenario" && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0975d7] rounded-r" />
-                  )}
-                  <IconFileText className={`w-4 h-4 ${activeTab === "scenario" ? "text-[#0975d7]" : "text-[#8d8ba7]"}`} stroke={2} />
-                  Scenario
-                </button>
-                <button
-                  onClick={() => setActiveTab("persona")}
-                  className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 relative ${
-                    activeTab === "persona"
-                      ? "bg-[#f0f0f5] text-[#0975d7]"
-                      : "text-[#8d8ba7] hover:bg-gray-50"
-                  }`}
-                >
-                  {activeTab === "persona" && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0975d7] rounded-r" />
-                  )}
-                  <IconUser className={`w-4 h-4 ${activeTab === "persona" ? "text-[#0975d7]" : "text-[#8d8ba7]"}`} stroke={2} />
-                  Customer persona
-                </button>
-                <button
-                  onClick={() => setActiveTab("evaluation")}
-                  className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 relative ${
-                    activeTab === "evaluation"
-                      ? "bg-[#f0f0f5] text-[#0975d7]"
-                      : "text-[#8d8ba7] hover:bg-gray-50"
-                  }`}
-                >
-                  {activeTab === "evaluation" && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0975d7] rounded-r" />
-                  )}
-                  <IconClipboardCheck className={`w-4 h-4 ${activeTab === "evaluation" ? "text-[#0975d7]" : "text-[#8d8ba7]"}`} stroke={2} />
-                  Evaluation
-                </button>
-                <button
-                  onClick={() => setActiveTab("exit")}
-                  className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 relative ${
-                    activeTab === "exit"
-                      ? "bg-[#f0f0f5] text-[#0975d7]"
-                      : "text-[#8d8ba7] hover:bg-gray-50"
-                  }`}
-                >
-                  {activeTab === "exit" && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0975d7] rounded-r" />
-                  )}
-                  <IconDoorExit className={`w-4 h-4 ${activeTab === "exit" ? "text-[#0975d7]" : "text-[#8d8ba7]"}`} stroke={2} />
-                  Exit conditions
-                </button>
-              </div>
-            </div>
-            <div className="border-t border-[#eee]">
+        {/* Content Area with Horizontal Tabs */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Horizontal Tab Navigation */}
+          <div className="border-b border-[#eee] bg-white shrink-0">
+            <div className="flex items-center px-4">
               <button
-                onClick={() => setActiveTab("settings")}
-                className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 relative ${
-                  activeTab === "settings"
-                    ? "bg-[#f0f0f5] text-[#0975d7]"
-                    : "text-[#8d8ba7] hover:bg-gray-50"
+                onClick={() => setActiveTab("scenario")}
+                className={`relative px-4 py-3 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === "scenario" ? "text-[#0975d7]" : "text-[#8d8ba7] hover:text-[#6b697b]"
                 }`}
               >
-                {activeTab === "settings" && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0975d7] rounded-r" />
+                <IconFileText className="w-4 h-4" stroke={2} />
+                Scenario
+                {activeTab === "scenario" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0975d7]" />
                 )}
-                <IconSettings className={`w-4 h-4 ${activeTab === "settings" ? "text-[#0975d7]" : "text-[#8d8ba7]"}`} stroke={2} />
+              </button>
+              <button
+                onClick={() => setActiveTab("persona")}
+                className={`relative px-4 py-3 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === "persona" ? "text-[#0975d7]" : "text-[#8d8ba7] hover:text-[#6b697b]"
+                }`}
+              >
+                <IconUser className="w-4 h-4" stroke={2} />
+                Customer persona
+                {activeTab === "persona" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0975d7]" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("evaluation")}
+                className={`relative px-4 py-3 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === "evaluation" ? "text-[#0975d7]" : "text-[#8d8ba7] hover:text-[#6b697b]"
+                }`}
+              >
+                <IconClipboardCheck className="w-4 h-4" stroke={2} />
+                Evaluation
+                {activeTab === "evaluation" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0975d7]" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("exit")}
+                className={`relative px-4 py-3 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === "exit" ? "text-[#0975d7]" : "text-[#8d8ba7] hover:text-[#6b697b]"
+                }`}
+              >
+                <IconDoorExit className="w-4 h-4" stroke={2} />
+                Exit conditions
+                {activeTab === "exit" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0975d7]" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("settings")}
+                className={`relative px-4 py-3 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === "settings" ? "text-[#0975d7]" : "text-[#8d8ba7] hover:text-[#6b697b]"
+                }`}
+              >
+                <IconSettings className="w-4 h-4" stroke={2} />
                 Settings
+                {activeTab === "settings" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0975d7]" />
+                )}
               </button>
             </div>
           </div>
@@ -1119,12 +1153,30 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                 </div>
 
                 {/* Editor */}
-                <div className="bg-white flex-1 overflow-y-auto">
+                <div className="bg-white flex-1 overflow-y-auto relative">
                   <div className="px-6 py-4 h-full">
-                    <div className="prose prose-sm max-w-none">
-                      <EditorContent editor={editor} />
-                    </div>
+                    {isPreviewingChanges ? (
+                      /* Show diff preview when previewing changes */
+                      <DiffPreview
+                        originalContent={originalContent}
+                        proposedContent={proposedContent}
+                        isVisible={isPreviewingChanges}
+                      />
+                    ) : (
+                      /* Show normal editor when not previewing */
+                      <div className="prose prose-sm max-w-none">
+                        <EditorContent editor={editor} />
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* AI Change Preview Action Bar */}
+                  <EditorChangePreview
+                    isVisible={isPreviewingChanges}
+                    onAccept={() => handleAcceptChange(proposedContent)}
+                    onReject={handleRejectChange}
+                    changesSummary="AI suggested changes"
+                  />
                 </div>
               </div>
             )}
