@@ -196,38 +196,30 @@ export default function App() {
               />
             </motion.div>
           )}
-          {currentScreen === "roleplay" && (
+          {(currentScreen === "roleplay" || currentScreen === "prompt") && (
             <motion.div
-              key="roleplay"
+              key="createScenario"
               variants={screenVariants}
               initial="initial"
               animate="animate"
               exit="exit"
               className="flex-1 flex flex-col overflow-hidden"
             >
-              <ScenarioBuilder 
-                onBack={handleNavigateToDashboard} 
-                onSwitchToPrompt={() => setCurrentScreen("prompt")}
-                onGenerateScenario={handleGenerateScenario}
-                onNavigateToDetail={handleNavigateToDetail}
-              />
-            </motion.div>
-          )}
-          {currentScreen === "prompt" && (
-            <motion.div
-              key="prompt"
-              variants={screenVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="flex-1 flex flex-col overflow-hidden"
-            >
-              <PromptScreen 
-                onBack={handleNavigateToDashboard}
-                onSwitchToBuilder={() => setCurrentScreen("roleplay")}
-                onGenerateScenario={handleGenerateFromPrompt}
-                onNavigateToDetail={handleNavigateToDetail}
-              />
+              {currentScreen === "roleplay" ? (
+                <ScenarioBuilder 
+                  onBack={handleNavigateToDashboard} 
+                  onSwitchToPrompt={() => setCurrentScreen("prompt")}
+                  onGenerateScenario={handleGenerateScenario}
+                  onNavigateToDetail={handleNavigateToDetail}
+                />
+              ) : (
+                <PromptScreen 
+                  onBack={handleNavigateToDashboard}
+                  onSwitchToBuilder={() => setCurrentScreen("roleplay")}
+                  onGenerateScenario={handleGenerateFromPrompt}
+                  onNavigateToDetail={handleNavigateToDetail}
+                />
+              )}
             </motion.div>
           )}
           {currentScreen === "scenarioDetail" && (
