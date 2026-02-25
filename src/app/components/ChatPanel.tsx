@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
-import { IconSparkles, IconSend, IconCheck, IconX, IconEye } from "@tabler/icons-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { IconSparkles, IconSend, IconCheck, IconX, IconEye, IconCircleCheck, IconCircleDashed } from "@tabler/icons-react";
 import { analyzePrompt, PromptAnalysisResult } from "../utils/promptAnalyzer";
+import { SCENARIO_CHECKLIST_ITEMS, ScenarioChecklistItem } from "../types/scenario";
 
 type PendingChange = {
   id: string;
@@ -101,6 +102,86 @@ export function ChatPanel({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Determine if we should show checklist (prompt is incomplete)
+  const shouldShowChecklist = promptAnalysis && 
+    (promptAnalysis.quality === "partial" || promptAnalysis.quality === "vague" || promptAnalysis.quality === "empty");
+
+  // Build checklist items with completion status
+  const checklistItems = useMemo<ScenarioChecklistItem[]>(() => {
+    if (!promptAnalysis) return [];
+    const extracted = promptAnalysis.extracted;
+    return SCENARIO_CHECKLIST_ITEMS.map(item => ({
+      ...item,
+      isCompleted: !!extracted[item.field as keyof typeof extracted],
+    }));
+  }, [promptAnalysis]);
+
+  // Track which checklist item is expanded
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+  const [checklistInputValue, setChecklistInputValue] = useState("");
+  const checklistInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle checklist item click - expand the item
+  const handleChecklistItemClick = (item: ScenarioChecklistItem) => {
+    if (item.isCompleted || isTyping) return;
+    
+    if (expandedItemId === item.id) {
+      // Collapse if already expanded
+      setExpandedItemId(null);
+      setChecklistInputValue("");
+    } else {
+      // Expand this item
+      setExpandedItemId(item.id);
+      setChecklistInputValue("");
+      // Focus input after render
+      setTimeout(() => checklistInputRef.current?.focus(), 100);
+    }
+  };
+
+  // Handle submitting a checklist answer
+  const handleChecklistSubmit = (item: ScenarioChecklistItem, value: string) => {
+    if (!value.trim()) return;
+    
+    // Add user message with their answer
+    const userMessage: ChatMessageType = {
+      id: Date.now().toString(),
+      role: "user",
+      content: value.trim(),
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Collapse the item
+    setExpandedItemId(null);
+    setChecklistInputValue("");
+    
+    // Simulate AI acknowledgment
+    setIsTyping(true);
+    setTimeout(() => {
+      const ackMessage: ChatMessageType = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Got it! I've noted the ${item.label.toLowerCase()}: **${value.trim()}**`,
+        timestamp: new Date(),
+        isMarkdown: true,
+      };
+      setMessages(prev => [...prev, ackMessage]);
+      setIsTyping(false);
+    }, 800);
+  };
+
+  // Handle quick pick selection
+  const handleQuickPick = (item: ScenarioChecklistItem, pick: string) => {
+    if (pick === "Pick for me") {
+      // Generate a random name
+      const names = ["Alex", "Jordan", "Sam", "Taylor", "Casey", "Morgan", "Riley"];
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      handleChecklistSubmit(item, randomName);
+    } else {
+      handleChecklistSubmit(item, pick);
+    }
+  };
 
   // Simulate generating a modified version of content
   const generateProposedContent = (userRequest: string, currentContent: string): { proposed: string; summary: string } => {
@@ -443,21 +524,123 @@ export function ChatPanel({
             </div>
           </div>
         )}
+        {/* Checklist - shown at bottom of messages when prompt is incomplete */}
+        {shouldShowChecklist && checklistItems.length > 0 && (
+          <div className="mt-4 mb-2 bg-[#f9f9fb] border border-[#e5e5ea] rounded-xl p-3">
+            <p className="text-xs font-medium text-[#6b697b] mb-2.5">What we need:</p>
+            <div className="space-y-1">
+              {checklistItems.map((item) => (
+                <div key={item.id}>
+                  {/* Checklist row */}
+                  <button
+                    onClick={() => handleChecklistItemClick(item)}
+                    disabled={item.isCompleted}
+                    className={`w-full flex items-start gap-2.5 px-2 py-1.5 rounded-lg text-left transition-colors ${
+                      item.isCompleted
+                        ? "bg-transparent cursor-default"
+                        : expandedItemId === item.id
+                        ? "bg-white"
+                        : "hover:bg-white cursor-pointer"
+                    }`}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      {item.isCompleted ? (
+                        <IconCircleCheck className="w-4 h-4 text-[#22c55e]" stroke={2} />
+                      ) : (
+                        <IconCircleDashed className="w-4 h-4 text-[#9ca3af]" stroke={2} />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className={`text-sm block ${
+                        item.isCompleted ? "text-[#22c55e] line-through" : "text-[#2b2b40]"
+                      }`}>
+                        {item.label}
+                      </span>
+                      <span className={`text-xs block mt-0.5 ${
+                        item.isCompleted ? "text-[#86efac]" : "text-[#8d8ba7]"
+                      }`}>
+                        {item.description}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Expanded input card */}
+                  {expandedItemId === item.id && !item.isCompleted && (
+                    <div className="ml-6 mt-2 mb-3 p-3 bg-white border border-[#e5e5ea] rounded-lg shadow-sm">
+                      <p className="text-sm text-[#2b2b40] mb-2">{item.question}</p>
+                      
+                      {/* Input field */}
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          ref={checklistInputRef}
+                          type="text"
+                          value={checklistInputValue}
+                          onChange={(e) => setChecklistInputValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && checklistInputValue.trim()) {
+                              handleChecklistSubmit(item, checklistInputValue);
+                            } else if (e.key === "Escape") {
+                              setExpandedItemId(null);
+                              setChecklistInputValue("");
+                            }
+                          }}
+                          placeholder={item.placeholder}
+                          className="flex-1 px-3 py-2 text-sm border border-[#e5e5ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 focus:border-[#0975d7]"
+                        />
+                        <button
+                          onClick={() => handleChecklistSubmit(item, checklistInputValue)}
+                          disabled={!checklistInputValue.trim()}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            checklistInputValue.trim()
+                              ? "bg-[#0975d7] text-white hover:bg-[#0860b0] cursor-pointer"
+                              : "bg-[#e5e5ea] text-[#9ca3af] cursor-not-allowed"
+                          }`}
+                        >
+                          Done
+                        </button>
+                      </div>
+
+                      {/* Quick picks */}
+                      {item.quickPicks && item.quickPicks.length > 0 && (
+                        <div>
+                          <p className="text-xs text-[#8d8ba7] mb-1.5">Quick picks:</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {item.quickPicks.map((pick) => (
+                              <button
+                                key={pick}
+                                onClick={() => handleQuickPick(item, pick)}
+                                className="px-2.5 py-1 text-xs bg-[#f5f5f5] hover:bg-[#e8e7ed] text-[#3d3c52] rounded-full transition-colors cursor-pointer"
+                              >
+                                {pick}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Actions */}
-      <div className="px-4 pb-2 flex gap-2 flex-wrap shrink-0">
-        {quickActions.map((action) => (
-          <button
-            key={action}
-            onClick={() => setInputValue(action)}
-            className="px-2.5 py-1 bg-[#f5f5f5] hover:bg-[#e8e7ed] text-[#6b697b] text-xs font-medium rounded-full transition-colors cursor-pointer"
-          >
-            {action}
-          </button>
-        ))}
-      </div>
+      {/* Quick Actions - only show when prompt is complete */}
+      {!shouldShowChecklist && (
+        <div className="px-4 pb-2 flex gap-2 flex-wrap shrink-0">
+          {quickActions.map((action) => (
+            <button
+              key={action}
+              onClick={() => setInputValue(action)}
+              className="px-2.5 py-1 bg-[#f5f5f5] hover:bg-[#e8e7ed] text-[#6b697b] text-xs font-medium rounded-full transition-colors cursor-pointer"
+            >
+              {action}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Input */}
       <div className="p-4 pt-2 border-t border-[#eee] shrink-0">

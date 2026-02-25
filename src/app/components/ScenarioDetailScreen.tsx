@@ -32,7 +32,7 @@ import {
   EvaluationParameter, 
   EvaluationTemplate, 
   ExitCondition, 
-  TabType 
+  TabType
 } from "../types/scenario";
 
 interface ScenarioDetailScreenProps {
@@ -90,7 +90,7 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
     promptAnalysis && 
     (promptAnalysis.quality === "partial" || promptAnalysis.quality === "vague" || promptAnalysis.quality === "empty")
   );
-  
+
   const getDefaultTitle = (data: ScenarioData | null | undefined): string => {
     if (shouldShowPlaceholder) return "New scenario (draft)";
     if (!data) return "Dealing with angry customer for refund scenario";
@@ -362,8 +362,13 @@ export function ScenarioDetailScreen({ onBack, onAttachWorkflow, scenarioData, a
                 </button>
               )}
               <button 
-                className="bg-[#d0450b] hover:bg-[#b83d0a] text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2"
-                onClick={() => setShowWorkflowModal(true)}
+                className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
+                  shouldShowPlaceholder 
+                    ? "bg-[#d0450b]/50 text-white/70 cursor-not-allowed" 
+                    : "bg-[#d0450b] hover:bg-[#b83d0a] text-white"
+                }`}
+                onClick={() => !shouldShowPlaceholder && setShowWorkflowModal(true)}
+                disabled={shouldShowPlaceholder}
               >
                 {attachedWorkflow ? "Update workflow" : "Attach to workflow"}
                 <IconArrowRight className="size-4" stroke={2} />

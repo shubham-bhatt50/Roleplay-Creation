@@ -73,6 +73,58 @@ export interface ExitCondition {
 // Tab types
 export type TabType = "scenario" | "persona" | "evaluation" | "exit" | "settings";
 
+// Checklist item for scenario building
+export interface ScenarioChecklistItem {
+  id: string;
+  field: string;
+  label: string;
+  description: string;
+  question: string;
+  quickPicks?: string[];
+  placeholder?: string;
+  isCompleted: boolean;
+}
+
+// Default checklist items for building a scenario
+export const SCENARIO_CHECKLIST_ITEMS: Omit<ScenarioChecklistItem, 'isCompleted'>[] = [
+  {
+    id: "scenario",
+    field: "scenario",
+    label: "Scenario context",
+    description: "What situation is the customer facing?",
+    question: "What is the customer's situation?",
+    placeholder: "e.g., requesting a refund for a defective product",
+    quickPicks: ["Refund request", "Billing inquiry", "Technical issue", "Order status", "Complaint"],
+  },
+  {
+    id: "emotion",
+    field: "emotion",
+    label: "Customer emotion",
+    description: "How is the customer feeling?",
+    question: "How is the customer feeling?",
+    placeholder: "e.g., frustrated, confused",
+    quickPicks: ["Angry", "Frustrated", "Confused", "Anxious", "Disappointed", "Calm"],
+  },
+  {
+    id: "trainee",
+    field: "trainee",
+    label: "Trainee role",
+    description: "Who is being trained?",
+    question: "Who will be trained with this scenario?",
+    placeholder: "e.g., customer support agent",
+    quickPicks: ["Customer support agent", "Sales representative", "Technical support", "Account manager"],
+  },
+  {
+    id: "customerName",
+    field: "customerName",
+    label: "Customer name",
+    description: "What should we call the customer?",
+    question: "What name should the customer have?",
+    placeholder: "e.g., Alex, Jordan",
+    quickPicks: ["Alex", "Jordan", "Sam", "Taylor", "Casey", "Pick for me"],
+  },
+];
+
 // Available competencies for evaluation mapping
 export const AVAILABLE_COMPETENCIES = [
   "Empathy",
