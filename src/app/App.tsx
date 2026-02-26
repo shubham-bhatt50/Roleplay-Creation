@@ -164,6 +164,12 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#fcfcfd] overflow-hidden">
+      {/* Prototype banner */}
+      <div className="bg-[#fef3c7] border-b border-[#fde68a] px-4 py-2 text-center shrink-0">
+        <p className="text-sm text-[#92400e]">
+          <span className="font-medium">Prototype</span> — This is a work in progress and not to be considered final.
+        </p>
+      </div>
       <div className="flex-1 flex overflow-hidden relative">
         <Sidebar 
           onNavigateToDashboard={handleNavigateToDashboard} 

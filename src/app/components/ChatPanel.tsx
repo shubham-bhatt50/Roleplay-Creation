@@ -103,24 +103,27 @@ export function ChatPanel({
     scrollToBottom();
   }, [messages]);
 
+  // Track fields completed via checklist (in addition to those extracted from prompt)
+  const [completedChecklistFields, setCompletedChecklistFields] = useState<Record<string, string>>({});
+
   // Determine if we should show checklist (prompt is incomplete)
   const shouldShowChecklist = promptAnalysis && 
     (promptAnalysis.quality === "partial" || promptAnalysis.quality === "vague" || promptAnalysis.quality === "empty");
 
-  // Build checklist items with completion status
+  // Build checklist items with completion status (combining extracted + user-completed)
   const checklistItems = useMemo<ScenarioChecklistItem[]>(() => {
     if (!promptAnalysis) return [];
     const extracted = promptAnalysis.extracted;
     return SCENARIO_CHECKLIST_ITEMS.map(item => ({
       ...item,
-      isCompleted: !!extracted[item.field as keyof typeof extracted],
+      isCompleted: !!extracted[item.field as keyof typeof extracted] || !!completedChecklistFields[item.field],
     }));
-  }, [promptAnalysis]);
+  }, [promptAnalysis, completedChecklistFields]);
 
   // Track which checklist item is expanded
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [checklistInputValue, setChecklistInputValue] = useState("");
-  const checklistInputRef = useRef<HTMLInputElement>(null);
+  const checklistInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Handle checklist item click - expand the item
   const handleChecklistItemClick = (item: ScenarioChecklistItem) => {
@@ -142,6 +145,12 @@ export function ChatPanel({
   // Handle submitting a checklist answer
   const handleChecklistSubmit = (item: ScenarioChecklistItem, value: string) => {
     if (!value.trim()) return;
+    
+    // Mark field as completed
+    setCompletedChecklistFields(prev => ({
+      ...prev,
+      [item.field]: value.trim()
+    }));
     
     // Add user message with their answer
     const userMessage: ChatMessageType = {
@@ -566,18 +575,18 @@ export function ChatPanel({
 
                   {/* Expanded input card */}
                   {expandedItemId === item.id && !item.isCompleted && (
-                    <div className="ml-6 mt-2 mb-3 p-3 bg-white border border-[#e5e5ea] rounded-lg shadow-sm">
-                      <p className="text-sm text-[#2b2b40] mb-2">{item.question}</p>
+                    <div className="ml-6 mt-2 mb-3 p-4 bg-white border border-[#e5e5ea] rounded-lg shadow-sm">
+                      <p className="text-sm text-[#2b2b40] mb-3">{item.question}</p>
                       
                       {/* Input field */}
-                      <div className="flex gap-2 mb-2">
-                        <input
+                      <div>
+                        <textarea
                           ref={checklistInputRef}
-                          type="text"
                           value={checklistInputValue}
                           onChange={(e) => setChecklistInputValue(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter" && checklistInputValue.trim()) {
+                            if (e.key === "Enter" && !e.shiftKey && checklistInputValue.trim()) {
+                              e.preventDefault();
                               handleChecklistSubmit(item, checklistInputValue);
                             } else if (e.key === "Escape") {
                               setExpandedItemId(null);
@@ -585,38 +594,22 @@ export function ChatPanel({
                             }
                           }}
                           placeholder={item.placeholder}
-                          className="flex-1 px-3 py-2 text-sm border border-[#e5e5ea] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0975d7]/20 focus:border-[#0975d7]"
+                          className="w-full h-24 px-4 py-3 text-sm bg-[#f9fafb] border border-[#d1d5db] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0975d7]/30 focus:border-[#0975d7] focus:bg-white placeholder:text-[#9ca3af] resize-none"
                         />
-                        <button
-                          onClick={() => handleChecklistSubmit(item, checklistInputValue)}
-                          disabled={!checklistInputValue.trim()}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            checklistInputValue.trim()
-                              ? "bg-[#0975d7] text-white hover:bg-[#0860b0] cursor-pointer"
-                              : "bg-[#e5e5ea] text-[#9ca3af] cursor-not-allowed"
-                          }`}
-                        >
-                          Done
-                        </button>
-                      </div>
-
-                      {/* Quick picks */}
-                      {item.quickPicks && item.quickPicks.length > 0 && (
-                        <div>
-                          <p className="text-xs text-[#8d8ba7] mb-1.5">Quick picks:</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {item.quickPicks.map((pick) => (
-                              <button
-                                key={pick}
-                                onClick={() => handleQuickPick(item, pick)}
-                                className="px-2.5 py-1 text-xs bg-[#f5f5f5] hover:bg-[#e8e7ed] text-[#3d3c52] rounded-full transition-colors cursor-pointer"
-                              >
-                                {pick}
-                              </button>
-                            ))}
-                          </div>
+                        <div className="flex justify-end mt-3">
+                          <button
+                            onClick={() => handleChecklistSubmit(item, checklistInputValue)}
+                            disabled={!checklistInputValue.trim()}
+                            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                              checklistInputValue.trim()
+                                ? "bg-[#0975d7] text-white hover:bg-[#0860b0] cursor-pointer"
+                                : "bg-[#e5e5ea] text-[#9ca3af] cursor-not-allowed"
+                            }`}
+                          >
+                            Done
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
                 </div>
