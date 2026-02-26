@@ -12,7 +12,7 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigateToDashboard, onSettingsClick, isSettingsActive, isWorkflowsActive = true }: SidebarProps) {
   return (
-    <div className="bg-[#1f1f32] flex flex-col h-screen items-start px-0 py-[8px] shrink-0 w-[240px] overflow-y-auto">
+    <div className="bg-[#1f1f32] flex flex-col h-full items-start px-0 py-[8px] shrink-0 w-[240px] overflow-y-auto">
       {/* Logo Section */}
       <div className="bg-[#1f1f32] relative shrink-0 w-full">
         <div className="flex flex-row items-center size-full">
